@@ -1,0 +1,714 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.App {
+    width: 100%;
+    max-width: 800px;
+}
+
+/* Navbar Styles */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.nav-brand a {
+    text-decoration: none;
+    color: #4285f4;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background: #f1f3f4;
+}
+
+.nav-link.active {
+    background: #e8f0fe;
+    color: #4285f4;
+    font-weight: 600;
+}
+
+.user-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.user-icon {
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    background: #f1f3f4;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 10px 0;
+    min-width: 150px;
+    z-index: 100;
+    display: none;
+}
+
+.user-menu:hover .user-dropdown {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #333;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.dropdown-item:hover {
+    background: #f1f3f4;
+}
+
+.dropdown-item.active {
+    background: #e8f0fe;
+    color: #4285f4;
+    font-weight: 600;
+}
+
+/* Button Styles */
+.btn-primary, .btn-secondary, .btn-edit, .btn-delete, .btn-gift, .btn-gift-list {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: #4285f4;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3367d6;
+}
+
+.btn-secondary {
+    background: #ea4335;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #d32f2f;
+}
+
+.btn-edit {
+    background: #f4b400;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #d39e00;
+}
+
+.btn-delete {
+    background: #ea4335;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #d32f2f;
+}
+
+.btn-gift {
+    background: #4285f4;
+    color: white;
+}
+
+.btn-gift:hover {
+    background: #3367d6;
+}
+
+.btn-gift-list {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-gift-list:hover {
+    background: #43a047;
+}
+
+.btn-primary-small {
+    padding: 5px 10px;
+    background: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btn-primary-small:hover:not(:disabled) {
+    background: #3367d6;
+}
+
+.btn-primary-small:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-delete-small {
+    background: #ea4335;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    padding: 0;
+}
+
+.btn-delete-small:hover {
+    background: #d32f2f;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #444;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #4285f4;
+    outline: none;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Subscription and Gift Option Styles */
+.subscription-options,
+.gift-options-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.subscription-btn,
+.gift-option-btn {
+    padding: 8px 16px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.subscription-btn:hover,
+.gift-option-btn:hover {
+    border-color: #4285f4;
+    background: #f8f9fa;
+}
+
+.subscription-btn.selected,
+.gift-option-btn.selected {
+    background: #4285f4;
+    color: white;
+    border-color: #4285f4;
+}
+
+.subscription-btn.small,
+.gift-option-btn.small {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+.subscription-display {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.current-subscription {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.subscription-buttons {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+/* Container Styles */
+.dashboard-container,
+.payments-container,
+.profile-container {
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-header,
+.payments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h2,
+.payments-header h2 {
+    color: #333;
+}
+
+.event-form-container,
+.payment-form-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.event-form-container h3,
+.payment-form-container h3 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Table Styles */
+.events-table,
+.gifts-table,
+.payment-methods-grid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.events-table th,
+.events-table td,
+.gifts-table th,
+.gifts-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.events-table th,
+.gifts-table th {
+    background: #f1f3f4;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase;
+    text-align: center;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.events-table tr:nth-child(even),
+.gifts-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.events-table tr:hover,
+.gifts-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Card Styles */
+.payment-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.payment-method-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.payment-method-card.primary {
+    border: 2px solid #4285f4;
+    background: #e8f0fe;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.card-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.card-actions {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.primary-badge {
+    background: #4285f4;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.card-details p {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.card-details strong {
+    display: inline-block;
+    width: 120px;
+}
+
+/* Text Styles */
+.error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.error-text {
+    color: #c62828;
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+h2 {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
+.helper-text {
+    color: #666;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.no-events,
+.no-payments,
+.no-gifts {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 40px;
+}
+
+/* Auth Styles */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.auth-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-card h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.auth-card .error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-google:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider span {
+    padding: 0 10px;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.auth-links a {
+    color: #4285f4;
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+/* Profile Styles */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #4285f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.user-info h3 {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.user-info a {
+    color: #4285f4;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.user-info a:hover {
+    text-decoration: underline;
+}
+
+/* Link Styles */
+.btn-link {
+    background: none;
+    border: none;
+    color: #4285f4;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    width: auto;
+}
+
+.btn-link:hover {
+    color: #3367d6;
+}
+
+/* Error Input Styles */
+.error-input {
+    border: 2px solid #e74c3c !important;
+}
+
+/* Actions Bar */
+.actions-bar {
+    margin-bottom: 20px;
+}
+
+/* Responsive Styles */
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .auth-card {
+        padding: 20px;
+    }
+
+    .dashboard-header,
+    .payments-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .events-table,
+    .gifts-table {
+        font-size: 0.9rem;
+    }
+
+    .events-table th,
+    .events-table td,
+    .gifts-table th,
+    .gifts-table td {
+        padding: 8px;
+    }
+
+    .subscription-options,
+    .gift-options-buttons {
+        flex-direction: column;
+    }
+
+    .subscription-buttons {
+        flex-direction: column;
+    }
+
+    .payment-methods-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .nav-links {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-end;
+    }
+}

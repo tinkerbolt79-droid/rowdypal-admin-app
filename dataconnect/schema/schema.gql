@@ -1,0 +1,30 @@
+# Document schema for user profile data
+type User {
+  address: String!
+  dob: String!
+  email: String!
+  firstName: String!
+  lastName: String!
+  lastUpdated: String!
+  phone: String!
+  userId: String!
+}
+
+# Input type for user profile updates
+input UserUpdateInput {
+  address: String
+  dob: String
+  firstName: String
+  lastName: String
+  phone: String
+}
+
+# Query to get user profile
+type Query {
+  getUser(userId: String!): User
+}
+
+# Mutation to update user profile
+type Mutation {
+  updateUser(userId: String!, input: UserUpdateInput!): User
+}

@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow users to read and write their own profile
+    match /users/{userId} {
+      allow create, read, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false; // Prevent users from deleting their profile
+    }
+
+    // Allow users to read admin doc
+    match /admins/{userId} {
+      allow read: if request.auth != null;
+    }
+    
+    // Allow users to read, create, update and delete their own events
+    match /events/{eventId} {
+      // Allow users to create events (authenticated users)
+      allow create: if request.auth != null;
+
+      // Allow authenticated users to read events (for admin app)
+      allow read: if request.auth != null;
+
+      // Allow users to update/delete their own events
+      allow update, delete: if request.auth != null &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    match /events-served/{document} {
+      allow delete: if request.auth != null;
+      allow create, read, update: if true;
+    }
+    
+    // Allow users to read, create, update and delete their own payment methods
+    match /paymentMethods/{paymentMethodId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+    }
+    
+    // Allow users to read, create, update and delete their own gift options
+    match /giftOptions/{giftOptionId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+    }
+    
+    // Allow users to read public data if any
+    match /{document=**} {
+      allow read: if false; // Default deny for all other documents
+    }
+  }
+}

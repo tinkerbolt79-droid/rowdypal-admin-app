@@ -1,0 +1,11 @@
+specVersion: "v1"
+serviceId: "rowdypal-8db00"
+location: "nam5"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "(default)"
+      cloudSql:
+        instanceId: "rowdypal-admin-app-fdc"
+connectorDirs: ["./example"]
