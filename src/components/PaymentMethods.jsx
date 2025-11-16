@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../hooks/useAuth'; // Use simple auth hook
+import CreditCardForm from './CreditCardForm';
+import BankAccountForm from './BankAccountForm';
+import PaymentMethodCard from './PaymentMethodCard';
 import '../global.css';
 
 export default function PaymentMethods() {
@@ -12,7 +15,7 @@ export default function PaymentMethods() {
   // State for payment methods
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [error,setError] = useState('');
+  const [error, setError] = useState('');
   
   // State for forms
   const [showAddForm, setShowAddForm] = useState(false);
@@ -32,7 +35,7 @@ export default function PaymentMethods() {
 
   // Fetch payment methods from Firestore
   useEffect(() => {
-    if(loading) return;
+    if (loading) return;
 
     if (!currentUser) {
       navigate('/login');
@@ -63,210 +66,7 @@ export default function PaymentMethods() {
     fetchPaymentMethods();
   }, [currentUser, loading, navigate]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors[name]) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-    
-    // Real-time validation for credit card fields
-    if (paymentType === 'credit') {
-      validateFieldOnInput(name, value);
-    }
-  };
-
-  const handleCardholderNameChange = (e) => {
-    let { value } = e.target;
-    
-    // Allow only letters, spaces, hyphens, and apostrophes
-    value = value.replace(/[^a-zA-Z\s\-']/g, '');
-    
-    setFormData(prev => ({
-      ...prev,
-      name: value
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors.name) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.name;
-        return newErrors;
-      });
-    }
-    
-    // Real-time validation for cardholder name
-    validateFieldOnInput('name', value);
-  };
-
-  const handleCardNumberChange = (e) => {
-    const formatted = formatCardNumber(e.target.value);
-    setFormData(prev => ({
-      ...prev,
-      number: formatted
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors.number) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.number;
-        return newErrors;
-      });
-    }
-    
-    // Real-time validation for card number
-    validateFieldOnInput('number', formatted);
-  };
-  
-  const handleExpiryChange = (e) => {
-    let { value } = e.target;
-    
-    // Remove all non-digit characters
-    value = value.replace(/\D/g, '');
-    
-    // Auto-add slash after 2 digits
-    if (value.length >= 3) {
-      value = value.substring(0, 2) + '/' + value.substring(2, 4);
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      expiry: value
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors.expiry) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.expiry;
-        return newErrors;
-      });
-    }
-    
-    // Real-time validation for expiry date
-    validateFieldOnInput('expiry', value);
-  };
-  
-  const handleCVVChange = (e) => {
-    let { value } = e.target;
-    
-    // Remove all non-digit characters
-    value = value.replace(/\D/g, '');
-    
-    // Limit to max 4 digits
-    if (value.length > 4) {
-      value = value.substring(0, 4);
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      cvv: value
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors.cvv) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.cvv;
-        return newErrors;
-      });
-    }
-    
-    // Real-time validation for CVV
-    validateFieldOnInput('cvv', value);
-  };
-  
-  const handleRoutingNumberChange = (e) => {
-    let { value } = e.target;
-    
-    // Remove all non-digit characters
-    value = value.replace(/\D/g, '');
-    
-    // Limit to max 9 digits
-    if (value.length > 9) {
-      value = value.substring(0, 9);
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      routingNumber: value
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors.routingNumber) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.routingNumber;
-        return newErrors;
-      });
-    }
-    
-    // Real-time validation for routing number
-    validateBankFieldOnInput('routingNumber', value);
-  };
-  
-  const handleAccountNumberChange = (e) => {
-    let { value } = e.target;
-    
-    // Remove all non-digit characters
-    value = value.replace(/\D/g, '');
-    
-    // Limit to max 17 digits
-    if (value.length > 17) {
-      value = value.substring(0, 17);
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      accountNumber: value
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors.accountNumber) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.accountNumber;
-        return newErrors;
-      });
-    }
-    
-    // Real-time validation for account number
-    validateBankFieldOnInput('accountNumber', value);
-  };
-  
-  const handleBankNameChange = (e) => {
-    let { value } = e.target;
-    
-    setFormData(prev => ({
-      ...prev,
-      bankName: value
-    }));
-    
-    // Clear error for this field when user starts typing
-    if (formErrors.bankName) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.bankName;
-        return newErrors;
-      });
-    }
-
-    // Real-time validation for bank name
-    validateBankFieldOnInput('bankName', value);
-  };
-  
-  const validateFieldOnInput = (fieldName, value) => {
+  const validateField = (fieldName, value) => {
     let errorMessage = '';
     
     switch(fieldName) {
@@ -299,29 +99,6 @@ export default function PaymentMethods() {
       }
       break;
         
-      // Bank account validations
-    case 'bankName':
-      if (value && value.trim().length < 2) {
-        errorMessage = 'Bank name must be at least 2 characters long';
-      }
-      break;
-        
-    case 'routingNumber':
-      if (value && value.length > 0 && value.length < 9) {
-        errorMessage = 'Routing number must be 9 digits';
-      } else if (value && value.length === 9 && !/^\d{9}$/.test(value)) {
-        errorMessage = 'Routing number must contain only digits';
-      }
-      break;
-        
-    case 'accountNumber':
-      if (value && value.length > 0 && (value.length < 6 || value.length > 17)) {
-        errorMessage = 'Account number must be between 6 and 17 digits';
-      } else if (value && !/^\d+$/.test(value)) {
-        errorMessage = 'Account number must contain only digits';
-      }
-      break;
-        
     default:
       break;
     }
@@ -340,7 +117,7 @@ export default function PaymentMethods() {
     }
   };
   
-  const validateBankFieldOnInput = (fieldName, value) => {
+  const validateBankField = (fieldName, value) => {
     let errorMessage = '';
     
     switch(fieldName) {
@@ -569,70 +346,6 @@ export default function PaymentMethods() {
     return `****${number.slice(-4)}`;
   };
 
-  const formatCardNumber = (value) => {
-    // Remove all non-digit characters
-    const cleaned = value.replace(/\D/g, '');
-    
-    // Limit to max 19 digits (maximum for most credit cards)
-    const limited = cleaned.substring(0, 19);
-    
-    // Format as groups of 4 digits
-    const match = limited.match(/^(\d{0,4})(\d{0,4})(\d{0,4})(\d{0,4})(\d{0,3})$/);
-    
-    if (!match) return value;
-    
-    // Build formatted string with spaces
-    let formatted = match[1];
-    if (match[2]) formatted += ' ' + match[2];
-    if (match[3]) formatted += ' ' + match[3];
-    if (match[4]) formatted += ' ' + match[4];
-    if (match[5]) formatted += ' ' + match[5];
-    
-    return formatted;
-  };
-
-  const getCardType = (cardNumber) => {
-    // Remove spaces and dashes
-    const cleaned = cardNumber.replace(/[\s-]/g, '');
-    
-    // Define card patterns
-    const cards = {
-      visa: /^4[0-9]{12}(?:[0-9]{3})?$/,
-      mastercard: /^5[1-5][0-9]{14}$/,
-      amex: /^3[47][0-9]{13}$/,
-      diners: /^3[0689][0-9]{12}$/,
-      discover: /^6(?:011|5[0-9]{2})[0-9]{12}$/,
-    };
-    
-    // Check card type
-    for (let card in cards) {
-      if (cards[card].test(cleaned)) {
-        return card.charAt(0).toUpperCase() + card.slice(1);
-      }
-    }
-    
-    return null;
-  };
-
-  const getCardTypeHelpText = (cardNumber) => {
-    if (!cardNumber) {
-      return 'Enter a valid credit card number (Visa, Mastercard, American Express, etc.)';
-    }
-    
-    const cardType = getCardType(cardNumber);
-    if (cardType) {
-      return `Detected: ${cardType}. Enter the full card number.`;
-    }
-    
-    // Check if it looks like a partial card number
-    const cleaned = cardNumber.replace(/[\s-]/g, '');
-    if (cleaned.length > 0 && cleaned.length < 13) {
-      return 'Credit card numbers typically have 13-19 digits';
-    }
-    
-    return 'Enter a valid credit card number';
-  };
-
   if (loading) {
     return (
       <div className="payments-container">
@@ -648,7 +361,7 @@ export default function PaymentMethods() {
   return (
     <div className="payments-container">
       <div className="payments-header">
-        <h2></h2>
+        <h2>Payment Types</h2>
         <button className="btn-primary" onClick={handleAddNew}>
           Add Payment
         </button>
@@ -681,129 +394,19 @@ export default function PaymentMethods() {
           
           <form onSubmit={handleSubmit}>
             {paymentType === 'credit' ? (
-              <>
-                <div className="form-group">
-                  <label>Cardholder Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleCardholderNameChange}
-                    className={formErrors.name ? 'error-input' : ''}
-                    required
-                  />
-                  {formErrors.name && <div className="error-text">{formErrors.name}</div>}
-                </div>
-                
-                <div className="form-group">
-                  <label>Card Number *</label>
-                  <input
-                    type="text"
-                    name="number"
-                    value={formData.number}
-                    onChange={handleCardNumberChange}
-                    className={formErrors.number ? 'error-input' : ''}
-                    placeholder="1234 5678 9012 3456"
-                    required
-                  />
-                  <div className="helper-text">
-                    {getCardTypeHelpText(formData.number)}
-                  </div>
-                  {formErrors.number && <div className="error-text">{formErrors.number}</div>}
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Expiry Date *</label>
-                    <input
-                      type="text"
-                      name="expiry"
-                      value={formData.expiry}
-                      onChange={handleExpiryChange}
-                      className={formErrors.expiry ? 'error-input' : ''}
-                      placeholder="MM/YY"
-                      required
-                    />
-                    <div className="helper-text">Format: MM/YY (e.g., 12/25)</div>
-                    {formErrors.expiry && <div className="error-text">{formErrors.expiry}</div>}
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>CVV</label>
-                    <input
-                      type="text"
-                      name="cvv"
-                      value={formData.cvv}
-                      onChange={handleCVVChange}
-                      className={formErrors.cvv ? 'error-input' : ''}
-                      placeholder="123"
-                    />
-                    <div className="helper-text">3 or 4 digits</div>
-                    {formErrors.cvv && <div className="error-text">{formErrors.cvv}</div>}
-                  </div>
-                </div>
-              </>
+              <CreditCardForm 
+                formData={formData} 
+                setFormData={setFormData} 
+                formErrors={formErrors} 
+                validateField={validateField}
+              />
             ) : (
-              <>
-                <div className="form-group">
-                  <label>Bank Name *</label>
-                  <input
-                    type="text"
-                    name="bankName"
-                    value={formData.bankName}
-                    onChange={handleBankNameChange}
-                    className={formErrors.bankName ? 'error-input' : ''}
-                    required
-                  />
-                  {formErrors.bankName && <div className="error-text">{formErrors.bankName}</div>}
-                </div>
-                
-                <div className="form-group">
-                  <label>Account Type</label>
-                  <div className="account-type-selector">
-                    <button
-                      type="button"
-                      className={`account-type-btn ${formData.accountType === 'checking' ? 'selected' : ''}`}
-                      onClick={() => setFormData({ ...formData, accountType: 'checking' })}
-                    >
-                      Checking
-                    </button>
-                    <button
-                      type="button"
-                      className={`account-type-btn ${formData.accountType === 'savings' ? 'selected' : ''}`}
-                      onClick={() => setFormData({ ...formData, accountType: 'savings' })}
-                    >Savings</button>
-                  </div>
-                </div>
-                
-                <div className="form-group">
-                  <label>Routing Number *</label>
-                  <input
-                    type="text"
-                    name="routingNumber"
-                    value={formData.routingNumber}
-                    onChange={handleRoutingNumberChange}
-                    className={formErrors.routingNumber ? 'error-input' : ''}
-                    required
-                  />
-                  <div className="helper-text">9 digits</div>
-                  {formErrors.routingNumber && <div className="error-text">{formErrors.routingNumber}</div>}
-                </div>
-                
-                <div className="form-group">
-                  <label>Account Number *</label>
-                  <input
-                    type="text"
-                    name="accountNumber"
-                    value={formData.accountNumber}
-                    onChange={handleAccountNumberChange}
-                    className={formErrors.accountNumber ? 'error-input' : ''}
-                    required
-                  />
-                  <div className="helper-text">6-17 digits</div>
-                  {formErrors.accountNumber && <div className="error-text">{formErrors.accountNumber}</div>}
-                </div>
-              </>
+              <BankAccountForm 
+                formData={formData} 
+                setFormData={setFormData} 
+                formErrors={formErrors} 
+                validateBankField={validateBankField}
+              />
             )}
             
             <div className="form-actions">
@@ -831,77 +434,16 @@ export default function PaymentMethods() {
         ) : (
           <>
             <h3>Saved Payment Types</h3>
-            <p></p>
             <div className="payment-methods-grid">
               {paymentMethods.map(method => (
-                <div key={method.id} className={`payment-method-card ${method.isPrimary ? 'primary' : ''}`}>
-                  {method.type === 'credit' ? (
-                    <>
-                      <div className="card-header">
-                        <div>
-                          <h4>Credit/Debit Card</h4>
-                          {method.isPrimary && <span className="primary-badge">Primary</span>}
-                        </div>
-                        <div className="card-actions">
-                          <button 
-                            className="btn-primary-small"
-                            onClick={() => setAsPrimary(method.id)}
-                            disabled={method.isPrimary}
-                          >
-                            {method.isPrimary ? 'Primary' : 'Set Primary'}
-                          </button>
-                          {!method.isPrimary && (
-                            <button 
-                              className="btn-delete-small"
-                              onClick={() => handleDelete(method.id)}
-                              title="Delete payment method"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="card-details">
-                        <p><strong>Cardholder:</strong> {method.name}</p>
-                        <p><strong>Card Number:</strong> {maskCardNumber(method.number)}</p>
-                        <p><strong>Expiry:</strong> {method.expiry}</p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="card-header">
-                        <div>
-                          <h4>Bank Account</h4>
-                          {method.isPrimary && <span className="primary-badge">Primary</span>}
-                        </div>
-                        <div className="card-actions">
-                          <button
-                            className="btn-primary-small"
-                            onClick={() => setAsPrimary(method.id)}
-                            disabled={method.isPrimary}
-                          >
-                            {method.isPrimary ? 'Primary' : 'Set Primary'}
-                          </button>
-                          {!method.isPrimary && (
-                            <button 
-                              className="btn-delete-small"
-                              onClick={() => handleDelete(method.id)}
-                              title="Delete payment method"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="card-details">
-                        <p><strong>Bank:</strong> {method.bankName}</p>
-                        <p><strong>Account Type:</strong> {method.accountType}</p>
-                        <p><strong>Routing Number:</strong> {maskCardNumber(method.routingNumber)}</p>
-                        <p><strong>Account Number:</strong> {maskAccountNumber(method.accountNumber)}</p>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <PaymentMethodCard 
+                  key={method.id}
+                  method={method}
+                  maskCardNumber={maskCardNumber}
+                  maskAccountNumber={maskAccountNumber}
+                  setAsPrimary={setAsPrimary}
+                  handleDelete={handleDelete}
+                />
               ))}
             </div>
           </>

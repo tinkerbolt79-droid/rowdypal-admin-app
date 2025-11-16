@@ -16,7 +16,7 @@ body {
 
 .App {
     width: 100%;
-    max-width: 800px;
+    max-width: 1200px;
 }
 
 /* Navbar Styles */
@@ -129,6 +129,7 @@ body {
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s ease;
+    margin: 2px;
 }
 
 .btn-primary {
@@ -362,11 +363,16 @@ body {
 }
 
 /* Table Styles */
+.events-table-container {
+    overflow-x: auto;
+}
+
 .events-table,
 .gifts-table,
 .payment-methods-grid {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20px;
 }
 
 .events-table th,
@@ -397,6 +403,14 @@ body {
 .events-table tr:hover,
 .gifts-table tr:hover {
     background-color: #f1f1f1;
+}
+
+.events-table td select,
+.gifts-table td select {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
 }
 
 /* Card Styles */
@@ -657,10 +671,36 @@ h2 {
 /* Actions Bar */
 .actions-bar {
     margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 /* Responsive Styles */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .form-row {
         flex-direction: column;
         gap: 0;
@@ -710,5 +750,13 @@ h2 {
         flex-direction: column;
         gap: 10px;
         align-items: flex-end;
+    }
+    
+    .actions-bar {
+        flex-direction: column;
+    }
+    
+    .App {
+        padding: 10px;
     }
 }

@@ -248,9 +248,6 @@ export default function Events() {
     <div className="dashboard-container">
       <div className="dashboard-header">
         <h2>Events</h2>
-        <button className="btn-secondary" onClick={() => navigate('/profile')}>
-          Profile
-        </button>
       </div>
 
       {error && (
@@ -263,9 +260,6 @@ export default function Events() {
         <button className="btn-primary" onClick={handleAddNew}>
           Add Event
         </button>
-        <Link to="/event-processor" className="btn-secondary">
-          Event Processor (Admin Only)
-        </Link>
       </div>
 
       {showAddForm && (
@@ -333,55 +327,58 @@ export default function Events() {
         </div>
       )}
 
-      <div className="events-list">
+      <div className="events-table-container">
         {events.length === 0 ? (
-          <p>No events found. Add your first event!</p>
+          <p className="no-events">No events found. Add your first event!</p>
         ) : (
-          events.map(event => (
-            <div key={event.id} className="event-card">
-              <div className="event-header">
-                <h3>{event.name}</h3>
-                <div className="event-actions">
-                  <button onClick={() => handleEdit(event)} className="btn-icon">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button onClick={() => handleDelete(event.id)} className="btn-icon">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-              <div className="event-details">
-                <p><strong>Date:</strong> {event.date}</p>
-                <p><strong>Subscription:</strong> {event.subscription || 'None'}</p>
-                <p><strong>Gift Option:</strong> {event.giftOption || 'Flowers'}</p>
-              </div>
-              <div className="event-controls">
-                <div className="control-group">
-                  <label>Subscription:</label>
-                  <select 
-                    value={event.subscription || 'None'} 
-                    onChange={(e) => updateSubscription(event.id, e.target.value)}
-                  >
-                    <option value="None">None</option>
-                    <option value="Flowers">Flowers</option>
-                    <option value="Chocolates">Chocolates</option>
-                    <option value="Both">Both</option>
-                  </select>
-                </div>
-                <div className="control-group">
-                  <label>Gift Option:</label>
-                  <select 
-                    value={event.giftOption || 'Flowers'} 
-                    onChange={(e) => updateGiftOption(event.id, e.target.value)}
-                  >
-                    <option value="Flowers">Flowers</option>
-                    <option value="Chocolates">Chocolates</option>
-                    <option value="Both">Both</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          ))
+          <table className="events-table">
+            <thead>
+              <tr>
+                <th>Event Name</th>
+                <th>Date</th>
+                <th>Subscription</th>
+                <th>Gift Option</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map(event => (
+                <tr key={event.id}>
+                  <td>{event.name}</td>
+                  <td>{event.date}</td>
+                  <td>
+                    <select 
+                      value={event.subscription || 'None'} 
+                      onChange={(e) => updateSubscription(event.id, e.target.value)}
+                    >
+                      <option value="None">None</option>
+                      <option value="Flowers">Flowers</option>
+                      <option value="Chocolates">Chocolates</option>
+                      <option value="Both">Both</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select 
+                      value={event.giftOption || 'Flowers'} 
+                      onChange={(e) => updateGiftOption(event.id, e.target.value)}
+                    >
+                      <option value="Flowers">Flowers</option>
+                      <option value="Chocolates">Chocolates</option>
+                      <option value="Both">Both</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button onClick={() => handleEdit(event)} className="btn-edit">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(event.id)} className="btn-delete">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>
