@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
+import { useAuth } from '../hooks/useAuth'; // Use simple auth hook
 import '../global.css';
 
 export default function Events() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
-  
-  // Removed console.log for security reasons
   
   const [events, setEvents] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -20,18 +18,20 @@ export default function Events() {
     subscription: 'None',
     giftOption: 'Flowers'
   });
-  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(true);
 
   // Fetch events from Firestore
   useEffect(() => {
+    if (loading) return;
+    
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    
     const fetchEvents = async () => {
-      if (!currentUser) {
-        // No current user, skipping fetch
-        return;
-      }
-      
       try {
         setFetching(true);
         // Fetching events for user
@@ -74,7 +74,7 @@ export default function Events() {
     };
 
     fetchEvents();
-  }, [currentUser]);
+  }, [currentUser, loading, navigate]);
 
   const handleInputChange = (e)=>{
     const { name, value } = e.target;
@@ -93,7 +93,7 @@ export default function Events() {
       return;
     }
     
-    setLoading(true);
+    setLoadingData(true);
     
     try {
       if (editingEvent) {
@@ -102,8 +102,8 @@ export default function Events() {
         await updateDoc(eventRef, {
           name: formData.name,
           date:formData.date,
-          subscription: formData.subscription, // Include subscription in update
-          giftOption: formData.giftOption // Include giftOption in update
+          subscription: formData.subscription,
+          giftOption: formData.giftOption
         });
         
         setEvents(prev => 
@@ -118,8 +118,8 @@ export default function Events() {
         const docRef = await addDoc(collection(db, 'events'), {
           name: formData.name,
           date: formData.date,
-          subscription: formData.subscription, // Include subscription in creation
-          giftOption: formData.giftOption, // Include giftOption in creation
+          subscription: formData.subscription,
+          giftOption: formData.giftOption,
           userId: currentUser.uid,
           createdAt: new Date()
         });
@@ -147,7 +147,7 @@ export default function Events() {
         setError('Failed to save event. Please try again.');
       }
     }finally{
-      setLoading(false);
+      setLoadingData(false);
     }
   };
 
@@ -198,30 +198,26 @@ export default function Events() {
     setFormData({
       name: event.name,
       date: event.date,
-      subscription: event.subscription || 'None', // Include subscription in form data
-      giftOption: event.giftOption || 'Flowers' // Include giftOption in form data
+      subscription: event.subscription || 'None',
+      giftOption: event.giftOption || 'Flowers'
     });
     setShowAddForm(true);
   };
 
-  const handleDelete= async (eventId)=> {
+  const handleDelete = async (eventId) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
         await deleteDoc(doc(db, 'events', eventId));
         setEvents(prev => prev.filter(event => event.id !== eventId));
       } catch (err) {
-        if(err.code === 'permission-denied') {
-          setError('Permission denied to delete event.');
-        } else {
-          setError('Failed to delete event. Please try again.');
-        }
+        setError('Failed to delete event. Please try again.');
       }
     }
   };
 
   const handleAddNew = () => {
     setEditingEvent(null);
-    setFormData({ name: '',date:'', subscription: 'None', giftOption: 'Flowers'});
+    setFormData({ name: '', date: '', subscription: 'None', giftOption: 'Flowers' });
     setShowAddForm(true);
   };
 
@@ -232,8 +228,8 @@ export default function Events() {
     setError('');
   };
 
-  if (fetching) {
-    return(
+  if (loading || fetching) {
+    return (
       <div className="dashboard-container">
         <div className="dashboard-header">
           <h2>Events</h2>
@@ -244,12 +240,16 @@ export default function Events() {
     );
   }
 
-  return(
+  if (!currentUser) {
+    return null; // Will redirect to login
+  }
+
+  return (
     <div className="dashboard-container">
       <div className="dashboard-header">
         <h2>Events</h2>
-        <button className="btn-primary" onClick={handleAddNew}>
-          Add Event
+        <button className="btn-secondary" onClick={() => navigate('/profile')}>
+          Profile
         </button>
       </div>
 
@@ -259,171 +259,129 @@ export default function Events() {
         </div>
       )}
 
+      <div className="actions-bar">
+        <button className="btn-primary" onClick={handleAddNew}>
+          Add Event
+        </button>
+        <Link to="/event-processor" className="btn-secondary">
+          Event Processor (Admin Only)
+        </Link>
+      </div>
+
       {showAddForm && (
-        <div className="event-form-container">
-          <h3>{editingEvent ? 'Edit Event' : 'Add New Event'}</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Event Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Event Date *</label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Subscription</label>
-              <div className="subscription-options">
-                <button
-                  type="button"
-                  className={`subscription-btn ${formData.subscription === 'Yearly' ? 'selected' : ''}`}
-                  onClick={() => setFormData({...formData, subscription: 'Yearly'})}
-                >
-                  Yearly
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{editingEvent ? 'Edit Event' : 'Add New Event'}</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Event Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Date *</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Subscription</label>
+                  <select
+                    name="subscription"
+                    value={formData.subscription}
+                    onChange={handleInputChange}
+                  >
+                    <option value="None">None</option>
+                    <option value="Flowers">Flowers</option>
+                    <option value="Chocolates">Chocolates</option>
+                    <option value="Both">Both</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Gift Option</label>
+                  <select
+                    name="giftOption"
+                    value={formData.giftOption}
+                    onChange={handleInputChange}
+                  >
+                    <option value="Flowers">Flowers</option>
+                    <option value="Chocolates">Chocolates</option>
+                    <option value="Both">Both</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-actions">
+                <button type="button" onClick={cancelForm} className="btn-secondary">
+                  Cancel
                 </button>
-                <button
-                  type="button"
-                  className={`subscription-btn ${formData.subscription === 'Monthly' ? 'selected' : ''}`}
-                  onClick={() => setFormData({...formData, subscription: 'Monthly'})}
-                >
-                  Monthly
-                </button>
-                <button
-                  type="button"
-                  className={`subscription-btn ${formData.subscription === 'None' ? 'selected' : ''}`}
-                  onClick={() => setFormData({...formData, subscription: 'None'})}
-                >
-                  None
+                <button type="submit" disabled={loadingData} className="btn-primary">
+                  {loadingData ? 'Saving...' : 'Save'}
                 </button>
               </div>
-            </div>
-            
-            <div className="form-group">
-              <label>Gift Option</label>
-              <div className="subscription-options">
-                <button
-                  type="button"
-                  className={`subscription-btn ${formData.giftOption === 'Flowers' ? 'selected' : ''}`}
-                  onClick={() => setFormData({...formData, giftOption: 'Flowers'})}
-                >
-                  Flowers
-                </button>
-                <button
-                  type="button"
-                  className={`subscription-btn ${formData.giftOption === 'Movie Tickets' ? 'selected' : ''}`}
-                  onClick={() => setFormData({...formData, giftOption: 'Movie Tickets'})}
-                >
-                  Movie Tickets
-                </button>
-                <button
-                  type="button"
-                  className={`subscription-btn ${formData.giftOption === 'Chocolates' ? 'selected' : ''}`}
-                  onClick={() => setFormData({...formData, giftOption: 'Chocolates'})}
-                >
-                  Chocolates
-                </button>
-              </div>
-            </div>
-            
-            <div className="form-actions">
-              <button 
-                type="button" 
-                className="btn-secondary"
-                onClick={cancelForm}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                className="btn-primary"
-                disabled={loading}
-              >
-                {loading ? 'Saving...' : (editingEvent ? 'Update Event' : 'Add Event')}
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       )}
 
       <div className="events-list">
-        {fetching ? (
-          <p>Loading events...</p>
-        ) : events.length === 0 ? (
-          <p className="no-events">No events found.Add your first event!</p>
+        {events.length === 0 ? (
+          <p>No events found. Add your first event!</p>
         ) : (
-          <table className="events-table">
-            <thead>
-              <tr>
-                <th>Event Name</th>
-                <th>Event Date</th>
-                <th>Preferred Gift</th>
-                <th>Subscription</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map(event => (
-                <tr key={event.id}>
-                  <td>
-                    <button 
-                      className="btn-link"
-                      onClick={() =>handleEdit(event)}
-                    >
-                      {event.name}
-                    </button>
-                  </td>
-                  <td>{event.date ?new Date(event.date).toLocaleDateString() : 'No date'}</td>
-                  <td>{event.giftOption}</td>
-                  <td>
-                    <div className="subscription-display">
-                      <div className="subscription-buttons">
-                        <button className={`subscription-btn ${event.subscription === 'Yearly' ? 'selected' : ''}`}
-                          onClick={() => updateSubscription(event.id,'Yearly')}
-                        >
-                          Yearly
-                        </button>
-                        <button
-                          className={`subscription-btn ${event.subscription === 'Monthly' ? 'selected' : ''}`}
-                          onClick={() => updateSubscription(event.id, 'Monthly')}
-                        >
-                          Monthly
-                        </button>
-                        <button
-                          className={`subscription-btn ${event.subscription === 'None' ? 'selected' : ''}`}
-                          onClick={() => updateSubscription(event.id, 'None')}
-                        >
-                          None
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDelete(event.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          events.map(event => (
+            <div key={event.id} className="event-card">
+              <div className="event-header">
+                <h3>{event.name}</h3>
+                <div className="event-actions">
+                  <button onClick={() => handleEdit(event)} className="btn-icon">
+                    <i className="fas fa-edit"></i>
+                  </button>
+                  <button onClick={() => handleDelete(event.id)} className="btn-icon">
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div className="event-details">
+                <p><strong>Date:</strong> {event.date}</p>
+                <p><strong>Subscription:</strong> {event.subscription || 'None'}</p>
+                <p><strong>Gift Option:</strong> {event.giftOption || 'Flowers'}</p>
+              </div>
+              <div className="event-controls">
+                <div className="control-group">
+                  <label>Subscription:</label>
+                  <select 
+                    value={event.subscription || 'None'} 
+                    onChange={(e) => updateSubscription(event.id, e.target.value)}
+                  >
+                    <option value="None">None</option>
+                    <option value="Flowers">Flowers</option>
+                    <option value="Chocolates">Chocolates</option>
+                    <option value="Both">Both</option>
+                  </select>
+                </div>
+                <div className="control-group">
+                  <label>Gift Option:</label>
+                  <select 
+                    value={event.giftOption || 'Flowers'} 
+                    onChange={(e) => updateGiftOption(event.id, e.target.value)}
+                  >
+                    <option value="Flowers">Flowers</option>
+                    <option value="Chocolates">Chocolates</option>
+                    <option value="Both">Both</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

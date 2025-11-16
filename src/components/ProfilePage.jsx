@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
+import { useAuth } from '../hooks/useAuth'; // Use simple auth hook
 
 export default function ProfilePage() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
 
   const [firstName, setFirstName] = useState('');
@@ -13,15 +13,21 @@ export default function ProfilePage() {
   const [dob, setDob] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (loading) return;
+    
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
 
     const fetchProfile = async () => {
       try {
+        setLoadingData(true);
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
@@ -33,23 +39,20 @@ export default function ProfilePage() {
         }
       } catch (err) {
         console.error('Profile fetch error:', err);
-        // Provide more specific error information
         if (err.code === 'permission-denied') {
-          // This might be because the user doesn't have a profile yet, or security rules are not set up correctly
           console.log('Permission denied when fetching profile.');
-          // We won't show an error to the user here since it's expected for new users
-          // The form fields will remain empty and the user can fill them in
         } else if (err.code === 'not-found') {
-          // This is not necessarily an error - the user might not have a profile yet
           console.log('User profile not found - this may be expected for new users');
         } else {
           setError(`Failed to fetch profile data: ${err.message || 'Unknown error'}`);
         }
+      } finally {
+        setLoadingData(false);
       }
     };
 
     fetchProfile();
-  }, [currentUser]);
+  }, [currentUser, loading, navigate]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -67,7 +70,7 @@ export default function ProfilePage() {
 
     try {
       setError('');
-      setLoading(true);
+      setLoadingData(true);
 
       const userData = {
         firstName: trimmedFirstName,
@@ -76,11 +79,10 @@ export default function ProfilePage() {
         address: trimmedAddress,
         phone: trimmedPhone,
         email: currentUser.email,
-        userId: currentUser.uid,  // Include user ID for security rules
+        userId: currentUser.uid,
         lastUpdated: new Date()
       };
 
-      // Try to update the user document
       await setDoc(doc(db, 'users', currentUser.uid), userData, { merge: true });
 
       setSuccess(true);
@@ -88,7 +90,6 @@ export default function ProfilePage() {
 
     } catch (err) {
       console.error('Profile update error:', err);
-      // Provide more specific error information
       if (err.code === 'permission-denied') {
         setError('Permission denied: You do not have permission to update profile.');
       } else if (err.code === 'not-found') {
@@ -98,7 +99,21 @@ export default function ProfilePage() {
       }
     }
 
-    setLoading(false);
+    setLoadingData(false);
+  }
+
+  if (loading || loadingData) {
+    return (
+      <div className="profile-container">
+        <div className="profile-card">
+          <h2>Loading profile...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return null; // Will redirect to login
   }
 
   return (
@@ -107,9 +122,9 @@ export default function ProfilePage() {
         <h2>Update Profile</h2>
 
         <div className="user-info">
-          <div className="avatar">{currentUser?.displayName?.charAt(0)}</div>
+          <div className="avatar">{currentUser?.email?.charAt(0)?.toUpperCase() || 'U'}</div>
           <div>
-            <h3>{currentUser?.displayName || 'User'}</h3>
+            <h3>{currentUser?.email}</h3>
             <p>{currentUser?.email}</p>
           </div>
         </div>
@@ -178,8 +193,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary">
-            {loading ? 'Updating...' : 'Update Profile'}
+          <button type="submit" disabled={loadingData} className="btn-primary">
+            {loadingData ? 'Updating...' : 'Update Profile'}
           </button>
         </form>
       </div>

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate} from 'react-router-dom';
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
+import { useAuth } from '../hooks/useAuth'; // Use simple auth hook
 import '../global.css';
 
 export default function PaymentMethods() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
+  const navigate = useNavigate();
   
   // State for payment methods
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loadingData, setLoadingData] = useState(true);
+  const [error,setError] = useState('');
   
   // State for forms
   const [showAddForm, setShowAddForm] = useState(false);
@@ -30,11 +32,16 @@ export default function PaymentMethods() {
 
   // Fetch payment methods from Firestore
   useEffect(() => {
+    if(loading) return;
+
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
     const fetchPaymentMethods = async () => {
-      if (!currentUser) return;
-      
       try {
-        setLoading(true);
+        setLoadingData(true);
         const q = query(
           collection(db, 'paymentMethods'),
           where('userId', '==', currentUser.uid)
@@ -49,12 +56,12 @@ export default function PaymentMethods() {
         console.error('Error fetching payment methods:', err);
         setError('Failed to fetch payment methods. Please try again.');
       } finally {
-        setLoading(false);
+        setLoadingData(false);
       }
     };
 
     fetchPaymentMethods();
-  }, [currentUser]);
+  }, [currentUser, loading, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -254,7 +261,7 @@ export default function PaymentMethods() {
         return newErrors;
       });
     }
-    
+
     // Real-time validation for bank name
     validateBankFieldOnInput('bankName', value);
   };
@@ -279,7 +286,7 @@ export default function PaymentMethods() {
         }
       }
       break;
-        
+
     case 'expiry':
       if (value && !isValidExpiryDate(value)) {
         errorMessage = 'Please enter a valid expiry date in MM/YY format';
@@ -765,9 +772,7 @@ export default function PaymentMethods() {
                       type="button"
                       className={`account-type-btn ${formData.accountType === 'savings' ? 'selected' : ''}`}
                       onClick={() => setFormData({ ...formData, accountType: 'savings' })}
-                    >
-                      Savings
-                    </button>
+                    >Savings</button>
                   </div>
                 </div>
                 
@@ -870,7 +875,7 @@ export default function PaymentMethods() {
                           {method.isPrimary && <span className="primary-badge">Primary</span>}
                         </div>
                         <div className="card-actions">
-                          <button 
+                          <button
                             className="btn-primary-small"
                             onClick={() => setAsPrimary(method.id)}
                             disabled={method.isPrimary}

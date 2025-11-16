@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth, verifyAndSetAdminClaim } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
@@ -7,7 +7,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, googleSignIn, adminSignInWithEmailAndPassword } = useAuth();
+  const { adminSignInWithEmailAndPassword, googleSignIn } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -16,10 +16,7 @@ export default function LoginPage() {
     try {
       setError('');
       setLoading(true);
-      const userCredential = await login(email, password);
-      // Verify admin status and set claim
-      const result = await verifyAndSetAdminClaim(userCredential, userCredential.user.email);
-      setCurrentUser(result.user);
+      await adminSignInWithEmailAndPassword(email, password);
       navigate('/events');
     } catch (err) {
       console.error('Login error:', err);
@@ -33,10 +30,7 @@ export default function LoginPage() {
     try {
       setError('');
       setLoading(true);
-      const userCredential = await googleSignIn();
-      // Verify admin status and set claim
-      const result = await verifyAndSetAdminClaim(userCredential, userCredential.user.email);
-      setCurrentUser(result.user);
+      await googleSignIn();
       navigate('/events');
     } catch (err) {
       console.error('Google sign-in error:', err);

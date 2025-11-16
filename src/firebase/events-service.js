@@ -122,6 +122,10 @@ async function getUpcomingEvents(currentDate) {
 
   } catch (error) {
     console.error("Error getting upcoming events:", error);
+    // Provide more specific error message
+    if (error.code === 'permission-denied') {
+      throw new Error('Insufficient permissions to access events. Please ensure you are logged in as an admin.');
+    }
     throw error;
   }
 }
@@ -209,6 +213,10 @@ async function getAllServedEvents(limitCount = 1000) {
 
   } catch (error) {
     console.error("Error getting all served events:", error);
+    // Provide more specific error message
+    if (error.code === 'permission-denied') {
+      throw new Error('Insufficient permissions to access served events. Please ensure you are logged in as an admin.');
+    }
     throw error;
   }
 }

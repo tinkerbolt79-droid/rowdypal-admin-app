@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
+import { useAuth } from '../hooks/useAuth'; // Use simple auth hook
 import '../global.css';
 
 export default function GiftOptions() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const { eventId } = useParams();
   const navigate = useNavigate();
   
   const [giftOptions, setGiftOptions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -24,8 +24,15 @@ export default function GiftOptions() {
 
   // Fetch gift options from Firestore
   useEffect(() => {
+    if (loading) return;
+    
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    
     const fetchGiftOptions = async () => {
-      if (!currentUser || !eventId) {
+      if (!eventId) {
         return;
       }
       
@@ -50,7 +57,7 @@ export default function GiftOptions() {
     };
 
     fetchGiftOptions();
-  }, [currentUser, eventId]);
+  }, [currentUser, eventId, loading, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -74,7 +81,7 @@ export default function GiftOptions() {
       return;
     }
     
-    setLoading(true);
+    setLoadingData(true);
     
     try {
       if (editingGift) {
@@ -124,7 +131,7 @@ export default function GiftOptions() {
     } catch (err) {
       setError('Failed to save gift option. Please try again.');
     } finally {
-      setLoading(false);
+      setLoadingData(false);
     }
   };
 
@@ -166,7 +173,7 @@ export default function GiftOptions() {
     navigate('/events');
   };
 
-  if (fetching) {
+  if (loading || fetching) {
     return (
       <div className="dashboard-container">
         <div className="dashboard-header">
@@ -176,6 +183,10 @@ export default function GiftOptions() {
         {error && <div className="error">{error}</div>}
       </div>
     );
+  }
+
+  if (!currentUser) {
+    return null; // Will redirect to login
   }
 
   return (
@@ -197,103 +208,82 @@ export default function GiftOptions() {
         <button className="btn-primary" onClick={handleAddNew}>
           Add Gift Option
         </button>
+        <Link to="/event-processor" className="btn-secondary">
+          Event Processor (Admin Only)
+        </Link>
       </div>
 
       {showAddForm && (
-        <div className="event-form-container">
-          <h3>{editingGift ? 'Edit Gift Option' : 'Add New Gift Option'}</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Gift Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows="3"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Price</label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                step="0.01"
-                min="0"
-              />
-            </div>
-            
-            <div className="form-actions">
-              <button 
-                type="button" 
-                className="btn-secondary"
-                onClick={cancelForm}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                className="btn-primary"
-                disabled={loading}
-              >
-                {loading ? 'Saving...' : (editingGift ? 'Update Gift' : 'Add Gift')}
-              </button>
-            </div>
-          </form>
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{editingGift ? 'Edit Gift Option' : 'Add New Gift Option'}</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Gift Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows="3"
+                />
+              </div>
+              <div className="form-group">
+                <label>Price</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+              <div className="form-actions">
+                <button type="button" onClick={cancelForm} className="btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" disabled={loadingData} className="btn-primary">
+                  {loadingData ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
       <div className="gifts-list">
         {giftOptions.length === 0 ? (
-          <p className="no-gifts">No gift options found. Add your first gift option!</p>
+          <p>No gift options found. Add your first gift option!</p>
         ) : (
-          <table className="gifts-table">
-            <thead>
-              <tr>
-                <th>Gift Name</th>
-                <th>Description</th>
-                <th>Price</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {giftOptions.map(gift => (
-                <tr key={gift.id}>
-                  <td>{gift.name}</td>
-                  <td>{gift.description || 'No description'}</td>
-                  <td>{gift.price ? `$${gift.price.toFixed(2)}` : 'No price'}</td>
-                  <td>
-                    <button 
-                      className="btn-edit"
-                      onClick={() => handleEdit(gift)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="btn-delete"
-                      onClick={() => handleDelete(gift.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          giftOptions.map(gift => (
+            <div key={gift.id} className="gift-card">
+              <div className="gift-header">
+                <h3>{gift.name}</h3>
+                <div className="gift-actions">
+                  <button onClick={() => handleEdit(gift)} className="btn-icon">
+                    <i className="fas fa-edit"></i>
+                  </button>
+                  <button onClick={() => handleDelete(gift.id)} className="btn-icon">
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div className="gift-details">
+                {gift.description && <p>{gift.description}</p>}
+                {gift.price && <p><strong>Price:</strong> ${gift.price.toFixed(2)}</p>}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

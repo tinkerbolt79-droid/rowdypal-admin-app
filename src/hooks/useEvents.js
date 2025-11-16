@@ -20,6 +20,10 @@ export function useEvents() {
     } catch (err) {
       setError(err);
       console.error('Error processing events:', err);
+      // Show a more user-friendly error message
+      if (err.message.includes('permission')) {
+        throw new Error('Access denied. Please ensure you are logged in as an administrator.');
+      }
       throw err;
     } finally {
       setProcessing(false);
