@@ -10,19 +10,21 @@ export default function Events() {
   const navigate = useNavigate();
   
   const [events, setEvents] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [giftOptions, setGiftOptions] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     date: '',
-    subscription: 'None',
-    giftOption: 'Flowers'
+    subscription: '',
+    giftOption: ''
   });
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(true);
 
-  // Fetch events from Firestore
+  // Fetch subscriptions and gift options from Firestore
   useEffect(() => {
     if (loading) return;
     
@@ -30,6 +32,47 @@ export default function Events() {
       navigate('/login');
       return;
     }
+    
+    const fetchDropdownData = async () => {
+      try {
+        // Fetch subscriptions
+        const subscriptionsQuery = query(collection(db, 'subscriptions'));
+        const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
+        const subscriptionsData = subscriptionsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setSubscriptions(subscriptionsData);
+        
+        // Set default subscription if available
+        if (subscriptionsData.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            subscription: subscriptionsData[0].id
+          }));
+        }
+        
+        // Fetch gift options
+        const giftOptionsQuery = query(collection(db, 'giftOptions'));
+        const giftOptionsSnapshot = await getDocs(giftOptionsQuery);
+        const giftOptionsData = giftOptionsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setGiftOptions(giftOptionsData);
+        
+        // Set default gift option if available
+        if (giftOptionsData.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            giftOption: giftOptionsData[0].id
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching dropdown data:', err);
+        setError('Failed to fetch subscription and gift options data. Please make sure the collections exist in Firestore.');
+      }
+    };
     
     const fetchEvents = async () => {
       try {
@@ -73,6 +116,7 @@ export default function Events() {
       }
     };
 
+    fetchDropdownData();
     fetchEvents();
   }, [currentUser, loading, navigate]);
 
@@ -90,6 +134,16 @@ export default function Events() {
     
     if (!formData.name || !formData.date) {
       setError('Please fill in all fields');
+      return;
+    }
+    
+    if (!formData.subscription) {
+      setError('Please select a subscription');
+      return;
+    }
+    
+    if (!formData.giftOption) {
+      setError('Please select a gift option');
       return;
     }
     
@@ -137,7 +191,12 @@ export default function Events() {
       }
       
       // Reset form
-      setFormData({ name:'', date: '',subscription:'None', giftOption: 'Flowers'});
+      setFormData({ 
+        name: '', 
+        date: '',
+        subscription: subscriptions.length > 0 ? subscriptions[0].id : '',
+        giftOption: giftOptions.length > 0 ? giftOptions[0].id : ''
+      });
       setShowAddForm(false);
       setEditingEvent(null);
     } catch (err) {
@@ -198,8 +257,8 @@ export default function Events() {
     setFormData({
       name: event.name,
       date: event.date,
-      subscription: event.subscription || 'None',
-      giftOption: event.giftOption || 'Flowers'
+      subscription: event.subscription || (subscriptions.length > 0 ? subscriptions[0].id : ''),
+      giftOption: event.giftOption || (giftOptions.length > 0 ? giftOptions[0].id : '')
     });
     setShowAddForm(true);
   };
@@ -217,14 +276,24 @@ export default function Events() {
 
   const handleAddNew = () => {
     setEditingEvent(null);
-    setFormData({ name: '', date: '', subscription: 'None', giftOption: 'Flowers' });
+    setFormData({ 
+      name: '', 
+      date: '', 
+      subscription: subscriptions.length > 0 ? subscriptions[0].id : '',
+      giftOption: giftOptions.length > 0 ? giftOptions[0].id : ''
+    });
     setShowAddForm(true);
   };
 
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingEvent(null);
-    setFormData({ name: '', date: '', subscription: 'None', giftOption: 'Flowers' });
+    setFormData({ 
+      name: '', 
+      date: '', 
+      subscription: subscriptions.length > 0 ? subscriptions[0].id : '',
+      giftOption: giftOptions.length > 0 ? giftOptions[0].id : ''
+    });
     setError('');
   };
 
@@ -294,11 +363,14 @@ export default function Events() {
                     name="subscription"
                     value={formData.subscription}
                     onChange={handleInputChange}
+                    required
                   >
-                    <option value="None">None</option>
-                    <option value="Flowers">Flowers</option>
-                    <option value="Chocolates">Chocolates</option>
-                    <option value="Both">Both</option>
+                    <option value="">Select a subscription</option>
+                    {subscriptions.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group">
@@ -307,10 +379,14 @@ export default function Events() {
                     name="giftOption"
                     value={formData.giftOption}
                     onChange={handleInputChange}
+                    required
                   >
-                    <option value="Flowers">Flowers</option>
-                    <option value="Chocolates">Chocolates</option>
-                    <option value="Both">Both</option>
+                    <option value="">Select a gift option</option>
+                    {giftOptions.map(option => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -348,23 +424,26 @@ export default function Events() {
                   <td>{event.date}</td>
                   <td>
                     <select 
-                      value={event.subscription || 'None'} 
+                      value={event.subscription || (subscriptions.length > 0 ? subscriptions[0].id : '')} 
                       onChange={(e) => updateSubscription(event.id, e.target.value)}
                     >
-                      <option value="None">None</option>
-                      <option value="Flowers">Flowers</option>
-                      <option value="Chocolates">Chocolates</option>
-                      <option value="Both">Both</option>
+                      {subscriptions.map(sub => (
+                        <option key={sub.id} value={sub.id}>
+                          {sub.name}
+                        </option>
+                      ))}
                     </select>
                   </td>
                   <td>
                     <select 
-                      value={event.giftOption || 'Flowers'} 
+                      value={event.giftOption || (giftOptions.length > 0 ? giftOptions[0].id : '')} 
                       onChange={(e) => updateGiftOption(event.id, e.target.value)}
                     >
-                      <option value="Flowers">Flowers</option>
-                      <option value="Chocolates">Chocolates</option>
-                      <option value="Both">Both</option>
+                      {giftOptions.map(option => (
+                        <option key={option.id} value={option.id}>
+                          {option.name}
+                        </option>
+                      ))}
                     </select>
                   </td>
                   <td>

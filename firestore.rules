@@ -34,6 +34,18 @@ service cloud.firestore {
         request.auth.uid == resource.data.userId;
     }
 
+    // Allow read access to subscriptions for all authenticated users
+    match /subscriptions/{subscriptionId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Allow read access to gift options for all authenticated users
+    match /giftOptions/{giftOptionId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin();
+    }
+
     match /events-served/{document} {
       // Only admins can manage events-served
       allow create, read, update, delete: if isAdmin();
@@ -41,12 +53,6 @@ service cloud.firestore {
     
     // Allow users to read, create, update and delete their own payment methods
     match /paymentMethods/{paymentMethodId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null;
-    }
-    
-    // Allow users to read, create, update and delete their own gift options
-    match /giftOptions/{giftOptionId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null;
     }
