@@ -19,7 +19,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (loading) return;
-    
+
     if (!currentUser) {
       navigate('/login');
       return;
@@ -42,9 +42,13 @@ export default function ProfilePage() {
         if (err.code === 'permission-denied') {
           console.log('Permission denied when fetching profile.');
         } else if (err.code === 'not-found') {
-          console.log('User profile not found - this may be expected for new users');
+          console.log(
+            'User profile not found - this may be expected for new users'
+          );
         } else {
-          setError(`Failed to fetch profile data: ${err.message || 'Unknown error'}`);
+          setError(
+            `Failed to fetch profile data: ${err.message || 'Unknown error'}`
+          );
         }
       } finally {
         setLoadingData(false);
@@ -63,7 +67,12 @@ export default function ProfilePage() {
     const trimmedAddress = address.trim();
     const trimmedPhone = phone.trim();
 
-    if (!trimmedFirstName || !trimmedLastName || !trimmedAddress || !trimmedPhone) {
+    if (
+      !trimmedFirstName ||
+      !trimmedLastName ||
+      !trimmedAddress ||
+      !trimmedPhone
+    ) {
       setError('Please fill in all required fields');
       return;
     }
@@ -80,22 +89,27 @@ export default function ProfilePage() {
         phone: trimmedPhone,
         email: currentUser.email,
         userId: currentUser.uid,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
-      await setDoc(doc(db, 'users', currentUser.uid), userData, { merge: true });
+      await setDoc(doc(db, 'users', currentUser.uid), userData, {
+        merge: true,
+      });
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-
     } catch (err) {
       console.error('Profile update error:', err);
       if (err.code === 'permission-denied') {
-        setError('Permission denied: You do not have permission to update profile.');
+        setError(
+          'Permission denied: You do not have permission to update profile.'
+        );
       } else if (err.code === 'not-found') {
         setError('Profile not found. Please try again or contact support.');
       } else {
-        setError(`Failed to update profile: ${err.message || 'Unknown error'}. Please try again.`);
+        setError(
+          `Failed to update profile: ${err.message || 'Unknown error'}. Please try again.`
+        );
       }
     }
 
@@ -122,7 +136,9 @@ export default function ProfilePage() {
         <h2>Update Profile</h2>
 
         <div className="user-info">
-          <div className="avatar">{currentUser?.email?.charAt(0)?.toUpperCase() || 'U'}</div>
+          <div className="avatar">
+            {currentUser?.email?.charAt(0)?.toUpperCase() || 'U'}
+          </div>
           <div>
             <h3>{currentUser?.email}</h3>
             <p>{currentUser?.email}</p>
@@ -130,7 +146,9 @@ export default function ProfilePage() {
         </div>
 
         {error && <div className="error">{error}</div>}
-        {success && <div className="success">Profile updated successfully!</div>}
+        {success && (
+          <div className="success">Profile updated successfully!</div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-row">
@@ -139,7 +157,7 @@ export default function ProfilePage() {
               <input
                 type="text"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={e => setFirstName(e.target.value)}
                 required
               />
             </div>
@@ -148,7 +166,7 @@ export default function ProfilePage() {
               <input
                 type="text"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={e => setLastName(e.target.value)}
                 required
               />
             </div>
@@ -159,7 +177,7 @@ export default function ProfilePage() {
             <input
               type="date"
               value={dob}
-              onChange={(e) => setDob(e.target.value)}
+              onChange={e => setDob(e.target.value)}
             />
           </div>
 
@@ -168,7 +186,7 @@ export default function ProfilePage() {
             <input
               type="text"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={e => setAddress(e.target.value)}
               required
             />
           </div>
@@ -179,17 +197,13 @@ export default function ProfilePage() {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={e => setPhone(e.target.value)}
                 required
               />
             </div>
             <div className="form-group">
               <label>Email</label>
-              <input
-                type="email"
-                value={currentUser?.email || ''}
-                disabled
-              />
+              <input type="email" value={currentUser?.email || ''} disabled />
             </div>
           </div>
 

@@ -3,6 +3,7 @@
 This guide consolidates all the information you need to configure Firestore for the RowdyPal application. Follow these steps to resolve "Permission denied" errors and properly set up Firestore security rules.
 
 ## Table of Contents
+
 1. [Prerequisites](#prerequisites)
 2. [Firestore Setup](#firestore-setup)
 3. [Deploying Firestore Rules](#deploying-firestore-rules)
@@ -37,13 +38,13 @@ service cloud.firestore {
       allow create, read, update: if request.auth != null && request.auth.uid == userId;
       allow delete: if false; // Prevent users from deleting their profile
     }
-    
+
     // Allow users to read, create, update and delete their own events
     match /events/{eventId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null;
     }
-    
+
     // Allow users to read public data if any
     match /{document=**} {
       allow read: if false; // Default deny for all other documents
@@ -53,6 +54,7 @@ service cloud.firestore {
 ```
 
 These rules allow users to:
+
 - Create, read, and update their own profile (but not delete it)
 - Create, read, update, and delete their own events
 - Not access other users' data
@@ -64,21 +66,25 @@ Note: During document creation, `resource.data.userId` doesn't exist yet, so we 
 To deploy the Firestore rules, use one of these commands:
 
 1. Deploy only Firestore rules:
+
    ```bash
    firebase deploy --only firestore
    ```
 
 2. Alternative command if the above doesn't work:
+
    ```bash
    firebase deploy --only firestore:rules
    ```
 
 3. Deploy Firestore and hosting (skip Data Connect if having issues):
+
    ```bash
    firebase deploy --except dataconnect
    ```
 
 4. Deploy only Firestore and hosting:
+
    ```bash
    firebase deploy --only firestore,hosting
    ```
@@ -147,6 +153,7 @@ gcloud services enable firestore.googleapis.com \
 ### Common Issues and Solutions
 
 #### Error: "Cannot understand what targets to deploy/serve"
+
 This means the [firebase.json](file:///Users/pmalla/git/RowdyPal/rowdypal-ui-app/firebase.json) file is missing the Firestore configuration. Make sure your [firebase.json](file:///Users/pmalla/git/RowdyPal/rowdypal-ui-app/firebase.json) includes:
 
 ```json
@@ -158,13 +165,16 @@ This means the [firebase.json](file:///Users/pmalla/git/RowdyPal/rowdypal-ui-app
 ```
 
 #### Error: "Missing permissions to deploy to project"
+
 This means your Google account doesn't have the necessary permissions. You need to be a Project Owner or have the "Cloud Firestore Admin" role.
 
 #### Error: "HTTP Error: 404, Project does not exist"
+
 Make sure you're using the correct project ID. You can check your project ID in the Firebase Console URL:
 `https://console.firebase.google.com/project/YOUR_PROJECT_ID`
 
 #### Data Connect Issues
+
 If you're seeing errors related to Data Connect:
 
 1. If you see "Cannot read properties of null (reading 'location')", check your [dataconnect/dataconnect.yaml](file:///Users/pmalla/git/RowdyPal/rowdypal-ui-app/dataconnect/dataconnect.yaml) file for proper configuration
@@ -172,25 +182,30 @@ If you're seeing errors related to Data Connect:
 3. If you see billing-related errors, you may need to upgrade to the Blaze plan
 
 If you don't need Data Connect functionality, you can deploy without it:
+
 ```bash
 firebase deploy --except dataconnect
 ```
 
 #### Issue: Rules don't match the expected structure
+
 Make sure your rules exactly match the structure in [firestore.rules](file:///Users/pmalla/git/RowdyPal/rowdypal-ui-app/firestore.rules), especially:
+
 - The `match /events/{eventId}` path
 - The condition `request.auth != null && request.auth.uid == resource.data.userId`
 
 #### Issue: Data structure mismatch
+
 Make sure the events you're creating have a `userId` field that matches the authenticated user's UID.
 
 When creating events in the app, we're setting:
+
 ```javascript
 const docRef = await addDoc(collection(db, 'events'), {
   name: formData.name,
   date: formData.date,
-  userId: currentUser.uid,  // This must match request.auth.uid in rules
-  createdAt: new Date()
+  userId: currentUser.uid, // This must match request.auth.uid in rules
+  createdAt: new Date(),
 });
 ```
 

@@ -1,14 +1,19 @@
 import React from 'react';
 
-export default function BankAccountForm({ formData, setFormData, formErrors, validateBankField }) {
-  const handleBankNameChange = (e) => {
+export default function BankAccountForm({
+  formData,
+  setFormData,
+  formErrors,
+  validateBankField,
+}) {
+  const handleBankNameChange = e => {
     let { value } = e.target;
     setFormData(prev => ({ ...prev, bankName: value }));
     // Real-time validation for bank name
     validateBankField('bankName', value);
   };
 
-  const handleRoutingNumberChange = (e) => {
+  const handleRoutingNumberChange = e => {
     let { value } = e.target;
     // Remove all non-digit characters
     value = value.replace(/\D/g, '');
@@ -21,7 +26,7 @@ export default function BankAccountForm({ formData, setFormData, formErrors, val
     validateBankField('routingNumber', value);
   };
 
-  const handleAccountNumberChange = (e) => {
+  const handleAccountNumberChange = e => {
     let { value } = e.target;
     // Remove all non-digit characters
     value = value.replace(/\D/g, '');
@@ -46,7 +51,9 @@ export default function BankAccountForm({ formData, setFormData, formErrors, val
           className={formErrors.bankName ? 'error-input' : ''}
           required
         />
-        {formErrors.bankName && <div className="error-text">{formErrors.bankName}</div>}
+        {formErrors.bankName && (
+          <div className="error-text">{formErrors.bankName}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -55,7 +62,9 @@ export default function BankAccountForm({ formData, setFormData, formErrors, val
           <button
             type="button"
             className={`account-type-btn ${formData.accountType === 'checking' ? 'selected' : ''}`}
-            onClick={() => setFormData({ ...formData, accountType: 'checking' })}
+            onClick={() =>
+              setFormData({ ...formData, accountType: 'checking' })
+            }
           >
             Checking
           </button>
@@ -80,7 +89,9 @@ export default function BankAccountForm({ formData, setFormData, formErrors, val
           required
         />
         <div className="helper-text">9 digits</div>
-        {formErrors.routingNumber && <div className="error-text">{formErrors.routingNumber}</div>}
+        {formErrors.routingNumber && (
+          <div className="error-text">{formErrors.routingNumber}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -94,7 +105,9 @@ export default function BankAccountForm({ formData, setFormData, formErrors, val
           required
         />
         <div className="helper-text">6-17 digits</div>
-        {formErrors.accountNumber && <div className="error-text">{formErrors.accountNumber}</div>}
+        {formErrors.accountNumber && (
+          <div className="error-text">{formErrors.accountNumber}</div>
+        )}
       </div>
     </>
   );

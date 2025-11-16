@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../hooks/useAuth'; // Use simple auth hook
 import '../global.css';
@@ -9,7 +18,7 @@ export default function GiftOptions() {
   const { currentUser, loading } = useAuth();
   const { eventId } = useParams();
   const navigate = useNavigate();
-  
+
   const [giftOptions, setGiftOptions] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
@@ -19,23 +28,23 @@ export default function GiftOptions() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: ''
+    price: '',
   });
 
   // Fetch gift options from Firestore
   useEffect(() => {
     if (loading) return;
-    
+
     if (!currentUser) {
       navigate('/login');
       return;
     }
-    
+
     const fetchGiftOptions = async () => {
       if (!eventId) {
         return;
       }
-      
+
       try {
         setFetching(true);
         const q = query(
@@ -46,7 +55,7 @@ export default function GiftOptions() {
         const querySnapshot = await getDocs(q);
         const giftsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
         setGiftOptions(giftsData);
       } catch (err) {
@@ -59,30 +68,30 @@ export default function GiftOptions() {
     fetchGiftOptions();
   }, [currentUser, eventId, loading, navigate]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
-    
+
     if (!formData.name) {
       setError('Please enter a gift name');
       return;
     }
-    
+
     if (formData.price && isNaN(formData.price)) {
       setError('Price must be a valid number');
       return;
     }
-    
+
     setLoadingData(true);
-    
+
     try {
       if (editingGift) {
         // Update existing gift option
@@ -90,13 +99,18 @@ export default function GiftOptions() {
         await updateDoc(giftRef, {
           name: formData.name,
           description: formData.description,
-          price: formData.price ? parseFloat(formData.price) : null
+          price: formData.price ? parseFloat(formData.price) : null,
         });
-        
-        setGiftOptions(prev => 
-          prev.map(gift => 
-            gift.id === editingGift.id 
-              ? { ...gift, name: formData.name, description: formData.description, price: formData.price ? parseFloat(formData.price) : null } 
+
+        setGiftOptions(prev =>
+          prev.map(gift =>
+            gift.id === editingGift.id
+              ? {
+                  ...gift,
+                  name: formData.name,
+                  description: formData.description,
+                  price: formData.price ? parseFloat(formData.price) : null,
+                }
               : gift
           )
         );
@@ -108,22 +122,22 @@ export default function GiftOptions() {
           price: formData.price ? parseFloat(formData.price) : null,
           userId: currentUser.uid,
           eventId: eventId,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
-        
+
         setGiftOptions(prev => [
           ...prev,
-          { 
-            id: docRef.id, 
+          {
+            id: docRef.id,
             name: formData.name,
             description: formData.description,
             price: formData.price ? parseFloat(formData.price) : null,
             userId: currentUser.uid,
-            eventId: eventId
-          }
+            eventId: eventId,
+          },
         ]);
       }
-      
+
       // Reset form
       setFormData({ name: '', description: '', price: '' });
       setShowAddForm(false);
@@ -135,17 +149,17 @@ export default function GiftOptions() {
     }
   };
 
-  const handleEdit = (gift) => {
+  const handleEdit = gift => {
     setEditingGift(gift);
     setFormData({
       name: gift.name,
       description: gift.description || '',
-      price: gift.price || ''
+      price: gift.price || '',
     });
     setShowAddForm(true);
   };
 
-  const handleDelete = async (giftId) => {
+  const handleDelete = async giftId => {
     if (window.confirm('Are you sure you want to delete this gift option?')) {
       try {
         await deleteDoc(doc(db, 'giftOptions', giftId));
@@ -198,11 +212,7 @@ export default function GiftOptions() {
         </button>
       </div>
 
-      {error && (
-        <div className="error">
-          {error}
-        </div>
-      )}
+      {error && <div className="error">{error}</div>}
 
       <div className="actions-bar">
         <button className="btn-primary" onClick={handleAddNew}>
@@ -249,10 +259,18 @@ export default function GiftOptions() {
                 />
               </div>
               <div className="form-actions">
-                <button type="button" onClick={cancelForm} className="btn-secondary">
+                <button
+                  type="button"
+                  onClick={cancelForm}
+                  className="btn-secondary"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={loadingData} className="btn-primary">
+                <button
+                  type="submit"
+                  disabled={loadingData}
+                  className="btn-primary"
+                >
                   {loadingData ? 'Saving...' : 'Save'}
                 </button>
               </div>
@@ -273,14 +291,21 @@ export default function GiftOptions() {
                   <button onClick={() => handleEdit(gift)} className="btn-icon">
                     <i className="fas fa-edit"></i>
                   </button>
-                  <button onClick={() => handleDelete(gift.id)} className="btn-icon">
+                  <button
+                    onClick={() => handleDelete(gift.id)}
+                    className="btn-icon"
+                  >
                     <i className="fas fa-trash"></i>
                   </button>
                 </div>
               </div>
               <div className="gift-details">
                 {gift.description && <p>{gift.description}</p>}
-                {gift.price && <p><strong>Price:</strong> ${gift.price.toFixed(2)}</p>}
+                {gift.price && (
+                  <p>
+                    <strong>Price:</strong> ${gift.price.toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
           ))

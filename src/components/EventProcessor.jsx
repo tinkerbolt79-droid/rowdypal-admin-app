@@ -12,11 +12,19 @@ export default function EventProcessor() {
   useEffect(() => {
     // Check if user is authenticated and is an admin
     if (currentUser && isAdmin) {
-      console.log('Admin user authenticated:', currentUser.uid, currentUser.email);
+      console.log(
+        'Admin user authenticated:',
+        currentUser.uid,
+        currentUser.email
+      );
       setFetching(false);
     } else if (currentUser && !isAdmin) {
       // User is authenticated but not an admin
-      console.log('User is not authorized for admin access:', currentUser.uid, currentUser.email);
+      console.log(
+        'User is not authorized for admin access:',
+        currentUser.uid,
+        currentUser.email
+      );
       // Redirect to a user dashboard or show unauthorized message
       navigate('/events');
     } else if (!currentUser) {
@@ -39,7 +47,7 @@ export default function EventProcessor() {
   };
 
   if (fetching) {
-    return(
+    return (
       <div className="dashboard-container">
         <div className="dashboard-header">
           <h2>Events</h2>
@@ -64,11 +72,20 @@ export default function EventProcessor() {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h2>Event Processor</h2>
-      
+
       {currentUser && (
-        <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#e3f2fd', borderRadius: '4px' }}>
-          <strong>Logged in as:</strong> {currentUser.email} ({currentUser.uid})<br/>
-          <strong>Admin Status:</strong> {isAdmin ? 'Authorized' : 'Not Authorized'}
+        <div
+          style={{
+            marginBottom: '15px',
+            padding: '10px',
+            backgroundColor: '#e3f2fd',
+            borderRadius: '4px',
+          }}
+        >
+          <strong>Logged in as:</strong> {currentUser.email} ({currentUser.uid})
+          <br />
+          <strong>Admin Status:</strong>{' '}
+          {isAdmin ? 'Authorized' : 'Not Authorized'}
         </div>
       )}
 
@@ -83,7 +100,7 @@ export default function EventProcessor() {
             padding: '10px 20px',
             borderRadius: '4px',
             cursor: processing ? 'not-allowed' : 'pointer',
-            fontSize: '16px'
+            fontSize: '16px',
           }}
         >
           {processing ? 'Processing...' : 'Process Events'}
@@ -100,7 +117,7 @@ export default function EventProcessor() {
               borderRadius: '4px',
               cursor: 'pointer',
               fontSize: '16px',
-              marginLeft: '10px'
+              marginLeft: '10px',
             }}
           >
             Clear Results
@@ -109,40 +126,52 @@ export default function EventProcessor() {
       </div>
 
       {processing && (
-        <div style={{
-          padding: '10px',
-          backgroundColor: '#e3f2fd',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>
+        <div
+          style={{
+            padding: '10px',
+            backgroundColor: '#e3f2fd',
+            borderRadius: '4px',
+            marginBottom: '20px',
+          }}
+        >
           Processing events, please wait...
         </div>
       )}
 
       {error && (
-        <div style={{
-          padding: '10px',
-          backgroundColor: '#ffebee',
-          color: '#c62828',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>
+        <div
+          style={{
+            padding: '10px',
+            backgroundColor: '#ffebee',
+            color: '#c62828',
+            borderRadius: '4px',
+            marginBottom: '20px',
+          }}
+        >
           Error: {error.message}
         </div>
       )}
 
       {result && (
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#e8f5e9',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>
+        <div
+          style={{
+            padding: '15px',
+            backgroundColor: '#e8f5e9',
+            borderRadius: '4px',
+            marginBottom: '20px',
+          }}
+        >
           <h3>Processing Results:</h3>
           <ul>
-            <li><strong>Copied Events:</strong> {result.copiedEvents.length}</li>
-            <li><strong>Total Upcoming Events:</strong> {result.totalUpcoming}</li>
-            <li><strong>Recently Served Events:</strong> {result.recentlyServed}</li>
+            <li>
+              <strong>Copied Events:</strong> {result.copiedEvents.length}
+            </li>
+            <li>
+              <strong>Total Upcoming Events:</strong> {result.totalUpcoming}
+            </li>
+            <li>
+              <strong>Recently Served Events:</strong> {result.recentlyServed}
+            </li>
           </ul>
         </div>
       )}

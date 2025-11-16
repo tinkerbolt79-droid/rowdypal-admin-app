@@ -1,31 +1,33 @@
 import React from 'react';
 
-const formatCardNumber = (value) => {
+const formatCardNumber = value => {
   // Remove all non-digit characters
   const cleaned = value.replace(/\D/g, '');
-  
+
   // Limit to max 19 digits (maximum for most credit cards)
   const limited = cleaned.substring(0, 19);
-  
+
   // Format as groups of 4 digits
-  const match = limited.match(/^(\d{0,4})(\d{0,4})(\d{0,4})(\d{0,4})(\d{0,3})$/);
-  
+  const match = limited.match(
+    /^(\d{0,4})(\d{0,4})(\d{0,4})(\d{0,4})(\d{0,3})$/
+  );
+
   if (!match) return value;
-  
+
   // Build formatted string with spaces
   let formatted = match[1];
   if (match[2]) formatted += ' ' + match[2];
   if (match[3]) formatted += ' ' + match[3];
   if (match[4]) formatted += ' ' + match[4];
   if (match[5]) formatted += ' ' + match[5];
-  
+
   return formatted;
 };
 
-const getCardType = (cardNumber) => {
+const getCardType = cardNumber => {
   // Remove spaces and dashes
   const cleaned = cardNumber.replace(/[\s-]/g, '');
-  
+
   // Define card patterns
   const cards = {
     visa: /^4[0-9]{12}(?:[0-9]{3})?$/,
@@ -34,19 +36,24 @@ const getCardType = (cardNumber) => {
     diners: /^3[0689][0-9]{12}$/,
     discover: /^6(?:011|5[0-9]{2})[0-9]{12}$/,
   };
-  
+
   // Check card type
   for (let card in cards) {
     if (cards[card].test(cleaned)) {
       return card.charAt(0).toUpperCase() + card.slice(1);
     }
   }
-  
+
   return null;
 };
 
-export default function CreditCardForm({ formData, setFormData, formErrors, validateField }) {
-  const handleCardholderNameChange = (e) => {
+export default function CreditCardForm({
+  formData,
+  setFormData,
+  formErrors,
+  validateField,
+}) {
+  const handleCardholderNameChange = e => {
     let { value } = e.target;
     // Allow only letters, spaces, hyphens, and apostrophes
     value = value.replace(/[^a-zA-Z\s\-']/g, '');
@@ -55,14 +62,14 @@ export default function CreditCardForm({ formData, setFormData, formErrors, vali
     validateField('name', value);
   };
 
-  const handleCardNumberChange = (e) => {
+  const handleCardNumberChange = e => {
     const formatted = formatCardNumber(e.target.value);
     setFormData(prev => ({ ...prev, number: formatted }));
     // Real-time validation for card number
     validateField('number', formatted);
   };
 
-  const handleExpiryChange = (e) => {
+  const handleExpiryChange = e => {
     let { value } = e.target;
     // Remove all non-digit characters
     value = value.replace(/\D/g, '');
@@ -75,7 +82,7 @@ export default function CreditCardForm({ formData, setFormData, formErrors, vali
     validateField('expiry', value);
   };
 
-  const handleCVVChange = (e) => {
+  const handleCVVChange = e => {
     let { value } = e.target;
     // Remove all non-digit characters
     value = value.replace(/\D/g, '');
@@ -88,7 +95,7 @@ export default function CreditCardForm({ formData, setFormData, formErrors, vali
     validateField('cvv', value);
   };
 
-  const getCardTypeHelpText = (cardNumber) => {
+  const getCardTypeHelpText = cardNumber => {
     if (!cardNumber) {
       return 'Enter a valid credit card number (Visa, Mastercard, American Express, etc.)';
     }
@@ -133,7 +140,9 @@ export default function CreditCardForm({ formData, setFormData, formErrors, vali
         <div className="helper-text">
           {getCardTypeHelpText(formData.number)}
         </div>
-        {formErrors.number && <div className="error-text">{formErrors.number}</div>}
+        {formErrors.number && (
+          <div className="error-text">{formErrors.number}</div>
+        )}
       </div>
 
       <div className="form-row">
@@ -149,7 +158,9 @@ export default function CreditCardForm({ formData, setFormData, formErrors, vali
             required
           />
           <div className="helper-text">Format: MM/YY (e.g., 12/25)</div>
-          {formErrors.expiry && <div className="error-text">{formErrors.expiry}</div>}
+          {formErrors.expiry && (
+            <div className="error-text">{formErrors.expiry}</div>
+          )}
         </div>
 
         <div className="form-group">

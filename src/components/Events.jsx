@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  orderBy,
+} from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../hooks/useAuth'; // Use simple auth hook
 import '../global.css';
@@ -8,7 +18,7 @@ import '../global.css';
 export default function Events() {
   const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
-  
+
   const [events, setEvents] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [giftOptions, setGiftOptions] = useState([]);
@@ -18,7 +28,7 @@ export default function Events() {
     name: '',
     date: '',
     subscription: '',
-    giftOption: ''
+    giftOption: '',
   });
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
@@ -27,12 +37,12 @@ export default function Events() {
   // Fetch subscriptions and gift options from Firestore
   useEffect(() => {
     if (loading) return;
-    
+
     if (!currentUser) {
       navigate('/login');
       return;
     }
-    
+
     const fetchDropdownData = async () => {
       try {
         // Fetch subscriptions
@@ -40,45 +50,47 @@ export default function Events() {
         const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
         const subscriptionsData = subscriptionsSnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
         setSubscriptions(subscriptionsData);
-        
+
         // Set default subscription if available
         if (subscriptionsData.length > 0) {
           setFormData(prev => ({
             ...prev,
-            subscription: subscriptionsData[0].id
+            subscription: subscriptionsData[0].id,
           }));
         }
-        
+
         // Fetch gift options
         const giftOptionsQuery = query(collection(db, 'giftOptions'));
         const giftOptionsSnapshot = await getDocs(giftOptionsQuery);
         const giftOptionsData = giftOptionsSnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
         setGiftOptions(giftOptionsData);
-        
+
         // Set default gift option if available
         if (giftOptionsData.length > 0) {
           setFormData(prev => ({
             ...prev,
-            giftOption: giftOptionsData[0].id
+            giftOption: giftOptionsData[0].id,
           }));
         }
       } catch (err) {
         console.error('Error fetching dropdown data:', err);
-        setError('Failed to fetch subscription and gift options data. Please make sure the collections exist in Firestore.');
+        setError(
+          'Failed to fetch subscription and gift options data. Please make sure the collections exist in Firestore.'
+        );
       }
     };
-    
+
     const fetchEvents = async () => {
       try {
         setFetching(true);
         // Fetching events for user
-        
+
         // First try to fetch with ordering
         const q = query(
           collection(db, 'events'),
@@ -88,7 +100,7 @@ export default function Events() {
         const querySnapshot = await getDocs(q);
         const eventsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
         setEvents(eventsData);
       } catch (err) {
@@ -101,11 +113,11 @@ export default function Events() {
           const querySnapshot = await getDocs(q);
           const eventsData = querySnapshot.docs.map(doc => ({
             id: doc.id,
-            ...doc.data()
+            ...doc.data(),
           }));
           setEvents(eventsData);
         } catch (fallbackErr) {
-          if (fallbackErr.code ==='permission-denied') {
+          if (fallbackErr.code === 'permission-denied') {
             setError('Permission denied when loading events.');
           } else {
             setError('Failed to fetch events. Please try again.');
@@ -120,54 +132,60 @@ export default function Events() {
     fetchEvents();
   }, [currentUser, loading, navigate]);
 
-  const handleInputChange = (e)=>{
+  const handleInputChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
-    
+
     if (!formData.name || !formData.date) {
       setError('Please fill in all fields');
       return;
     }
-    
+
     if (!formData.subscription) {
       setError('Please select a subscription');
       return;
     }
-    
+
     if (!formData.giftOption) {
       setError('Please select a gift option');
       return;
     }
-    
+
     setLoadingData(true);
-    
+
     try {
       if (editingEvent) {
         // Update existing event
         const eventRef = doc(db, 'events', editingEvent.id);
         await updateDoc(eventRef, {
           name: formData.name,
-          date:formData.date,
+          date: formData.date,
           subscription: formData.subscription,
-          giftOption: formData.giftOption
+          giftOption: formData.giftOption,
         });
-        
-        setEvents(prev => 
-          prev.map(event => 
-            event.id === editingEvent.id 
-              ? { ...event, name: formData.name, date: formData.date, subscription: formData.subscription, giftOption: formData.giftOption } 
+
+        setEvents(prev =>
+          prev.map(event =>
+            event.id === editingEvent.id
+              ? {
+                  ...event,
+                  name: formData.name,
+                  date: formData.date,
+                  subscription: formData.subscription,
+                  giftOption: formData.giftOption,
+                }
               : event
           )
         );
-      }else {
+      } else {
         // Add new event
         const docRef = await addDoc(collection(db, 'events'), {
           name: formData.name,
@@ -175,27 +193,27 @@ export default function Events() {
           subscription: formData.subscription,
           giftOption: formData.giftOption,
           userId: currentUser.uid,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
-        setEvents(prev=> [
+        setEvents(prev => [
           ...prev,
-          { 
-            id: docRef.id, 
-            name: formData.name, 
+          {
+            id: docRef.id,
+            name: formData.name,
             date: formData.date,
             subscription: formData.subscription,
             giftOption: formData.giftOption,
-            userId: currentUser.uid
-          }
+            userId: currentUser.uid,
+          },
         ]);
       }
-      
+
       // Reset form
-      setFormData({ 
-        name: '', 
+      setFormData({
+        name: '',
         date: '',
         subscription: subscriptions.length > 0 ? subscriptions[0].id : '',
-        giftOption: giftOptions.length > 0 ? giftOptions[0].id : ''
+        giftOption: giftOptions.length > 0 ? giftOptions[0].id : '',
       });
       setShowAddForm(false);
       setEditingEvent(null);
@@ -205,7 +223,7 @@ export default function Events() {
       } else {
         setError('Failed to save event. Please try again.');
       }
-    }finally{
+    } finally {
       setLoadingData(false);
     }
   };
@@ -215,14 +233,14 @@ export default function Events() {
     try {
       const eventRef = doc(db, 'events', eventId);
       await updateDoc(eventRef, {
-        subscription: subscriptionValue
+        subscription: subscriptionValue,
       });
-      
+
       //Update local state
-      setEvents(prev => 
-        prev.map(event => 
-          event.id === eventId 
-            ? { ...event, subscription: subscriptionValue } 
+      setEvents(prev =>
+        prev.map(event =>
+          event.id === eventId
+            ? { ...event, subscription: subscriptionValue }
             : event
         )
       );
@@ -236,14 +254,14 @@ export default function Events() {
     try {
       const eventRef = doc(db, 'events', eventId);
       await updateDoc(eventRef, {
-        giftOption: giftOptionValue
+        giftOption: giftOptionValue,
       });
-      
+
       // Update local state
       setEvents(prev =>
-        prev.map(event => 
-          event.id === eventId 
-            ? { ...event, giftOption: giftOptionValue } 
+        prev.map(event =>
+          event.id === eventId
+            ? { ...event, giftOption: giftOptionValue }
             : event
         )
       );
@@ -252,18 +270,21 @@ export default function Events() {
     }
   };
 
-  const handleEdit = (event) => {
+  const handleEdit = event => {
     setEditingEvent(event);
     setFormData({
       name: event.name,
       date: event.date,
-      subscription: event.subscription || (subscriptions.length > 0 ? subscriptions[0].id : ''),
-      giftOption: event.giftOption || (giftOptions.length > 0 ? giftOptions[0].id : '')
+      subscription:
+        event.subscription ||
+        (subscriptions.length > 0 ? subscriptions[0].id : ''),
+      giftOption:
+        event.giftOption || (giftOptions.length > 0 ? giftOptions[0].id : ''),
     });
     setShowAddForm(true);
   };
 
-  const handleDelete = async (eventId) => {
+  const handleDelete = async eventId => {
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
         await deleteDoc(doc(db, 'events', eventId));
@@ -276,11 +297,11 @@ export default function Events() {
 
   const handleAddNew = () => {
     setEditingEvent(null);
-    setFormData({ 
-      name: '', 
-      date: '', 
+    setFormData({
+      name: '',
+      date: '',
       subscription: subscriptions.length > 0 ? subscriptions[0].id : '',
-      giftOption: giftOptions.length > 0 ? giftOptions[0].id : ''
+      giftOption: giftOptions.length > 0 ? giftOptions[0].id : '',
     });
     setShowAddForm(true);
   };
@@ -288,11 +309,11 @@ export default function Events() {
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingEvent(null);
-    setFormData({ 
-      name: '', 
-      date: '', 
+    setFormData({
+      name: '',
+      date: '',
       subscription: subscriptions.length > 0 ? subscriptions[0].id : '',
-      giftOption: giftOptions.length > 0 ? giftOptions[0].id : ''
+      giftOption: giftOptions.length > 0 ? giftOptions[0].id : '',
     });
     setError('');
   };
@@ -319,11 +340,7 @@ export default function Events() {
         <h2>Events</h2>
       </div>
 
-      {error && (
-        <div className="error">
-          {error}
-        </div>
-      )}
+      {error && <div className="error">{error}</div>}
 
       <div className="actions-bar">
         <button className="btn-primary" onClick={handleAddNew}>
@@ -391,10 +408,18 @@ export default function Events() {
                 </div>
               </div>
               <div className="form-actions">
-                <button type="button" onClick={cancelForm} className="btn-secondary">
+                <button
+                  type="button"
+                  onClick={cancelForm}
+                  className="btn-secondary"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={loadingData} className="btn-primary">
+                <button
+                  type="submit"
+                  disabled={loadingData}
+                  className="btn-primary"
+                >
                   {loadingData ? 'Saving...' : 'Save'}
                 </button>
               </div>
@@ -423,9 +448,14 @@ export default function Events() {
                   <td>{event.name}</td>
                   <td>{event.date}</td>
                   <td>
-                    <select 
-                      value={event.subscription || (subscriptions.length > 0 ? subscriptions[0].id : '')} 
-                      onChange={(e) => updateSubscription(event.id, e.target.value)}
+                    <select
+                      value={
+                        event.subscription ||
+                        (subscriptions.length > 0 ? subscriptions[0].id : '')
+                      }
+                      onChange={e =>
+                        updateSubscription(event.id, e.target.value)
+                      }
                     >
                       {subscriptions.map(sub => (
                         <option key={sub.id} value={sub.id}>
@@ -435,9 +465,12 @@ export default function Events() {
                     </select>
                   </td>
                   <td>
-                    <select 
-                      value={event.giftOption || (giftOptions.length > 0 ? giftOptions[0].id : '')} 
-                      onChange={(e) => updateGiftOption(event.id, e.target.value)}
+                    <select
+                      value={
+                        event.giftOption ||
+                        (giftOptions.length > 0 ? giftOptions[0].id : '')
+                      }
+                      onChange={e => updateGiftOption(event.id, e.target.value)}
                     >
                       {giftOptions.map(option => (
                         <option key={option.id} value={option.id}>
@@ -447,10 +480,16 @@ export default function Events() {
                     </select>
                   </td>
                   <td>
-                    <button onClick={() => handleEdit(event)} className="btn-edit">
+                    <button
+                      onClick={() => handleEdit(event)}
+                      className="btn-edit"
+                    >
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(event.id)} className="btn-delete">
+                    <button
+                      onClick={() => handleDelete(event.id)}
+                      className="btn-delete"
+                    >
                       Delete
                     </button>
                   </td>

@@ -10,7 +10,7 @@ export default function DebugEvents() {
 
   const fetchAllEvents = async () => {
     if (!currentUser) return;
-    
+
     setLoading(true);
     try {
       console.log('Fetching all events for user:', currentUser.uid);
@@ -21,7 +21,7 @@ export default function DebugEvents() {
       const querySnapshot = await getDocs(q);
       const eventsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       console.log('All events fetched:', eventsData);
       setEvents(eventsData);

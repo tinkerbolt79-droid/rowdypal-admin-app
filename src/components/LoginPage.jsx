@@ -34,7 +34,9 @@ export default function LoginPage() {
       navigate('/events');
     } catch (err) {
       console.error('Google sign-in error:', err);
-      setError(`Failed to sign in with Google: ${err.message || 'Unknown error'}`);
+      setError(
+        `Failed to sign in with Google: ${err.message || 'Unknown error'}`
+      );
     }
 
     setLoading(false);
@@ -54,7 +56,7 @@ export default function LoginPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               placeholder="User ID"
               required
             />
@@ -64,7 +66,7 @@ export default function LoginPage() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               placeholder="Password"
               required
             />
@@ -82,7 +84,8 @@ export default function LoginPage() {
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="btn-google">
+          className="btn-google"
+        >
           <i className="fab fa-google"></i> Sign in with Google
         </button>
       </div>

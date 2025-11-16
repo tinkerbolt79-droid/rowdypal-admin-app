@@ -7,8 +7,8 @@ import {
   Timestamp,
   where,
   orderBy,
-  limit
-} from "firebase/firestore";
+  limit,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 async function copyUpcomingEventsMaintainHistory() {
@@ -26,7 +26,9 @@ async function copyUpcomingEventsMaintainHistory() {
     const recentlyServedMap = new Map();
     recentlyServedEvents.forEach(servedEvent => {
       const servedData = servedEvent.data();
-      const eventDate = servedData.date?.toDate ? servedData.date.toDate() : new Date(servedData.date);
+      const eventDate = servedData.date?.toDate
+        ? servedData.date.toDate()
+        : new Date(servedData.date);
       const eventMonthDay = `${eventDate.getMonth()}-${eventDate.getDate()}`;
       const key = `${servedData.originalEventId || servedData.id}-${eventMonthDay}`;
       recentlyServedMap.set(key, true);
@@ -34,16 +36,18 @@ async function copyUpcomingEventsMaintainHistory() {
 
     // Filter out events that have already been served within the 10-day window
     const newEventsToServe = upcomingEvents.filter(event => {
-      const eventDate = event.date?.toDate ? event.date.toDate() : new Date(event.date);
+      const eventDate = event.date?.toDate
+        ? event.date.toDate()
+        : new Date(event.date);
       const eventMonthDay = `${eventDate.getMonth()}-${eventDate.getDate()}`;
       const key = `${event.id}-${eventMonthDay}`;
       return !recentlyServedMap.has(key);
     });
 
     // Copy new events to events-served collection
-    const copyPromises = newEventsToServe.map(async (event) => {
+    const copyPromises = newEventsToServe.map(async event => {
       // Create a new document in events-served collection
-      const servedEventRef = doc(collection(db, "events-served"));
+      const servedEventRef = doc(collection(db, 'events-served'));
 
       // Add metadata for tracking and history
       const servedEventData = {
@@ -51,7 +55,7 @@ async function copyUpcomingEventsMaintainHistory() {
         originalEventId: event.id, // Store original event ID
         servedAt: Timestamp.now(), // When this copy was served
         servedForDate: currentDate.toISOString().split('T')[0], // Date when it was served for
-        dateServedAs: event.date // Original event date (for reference)
+        dateServedAs: event.date, // Original event date (for reference)
       };
 
       return setDoc(servedEventRef, servedEventData);
@@ -60,18 +64,21 @@ async function copyUpcomingEventsMaintainHistory() {
     // Wait for all copy operations to complete
     await Promise.all(copyPromises);
 
-    console.log(`Successfully copied ${newEventsToServe.length} new events to events-served collection`);
-    console.log(`${recentlyServedEvents.length} events were already served recently`);
+    console.log(
+      `Successfully copied ${newEventsToServe.length} new events to events-served collection`
+    );
+    console.log(
+      `${recentlyServedEvents.length} events were already served recently`
+    );
     console.log(`Total events considered: ${upcomingEvents.length}`);
 
     return {
       copiedEvents: newEventsToServe,
       totalUpcoming: upcomingEvents.length,
-      recentlyServed: recentlyServedEvents.length
+      recentlyServed: recentlyServedEvents.length,
     };
-
   } catch (error) {
-    console.error("Error copying events:", error);
+    console.error('Error copying events:', error);
     throw error;
   }
 }
@@ -79,15 +86,17 @@ async function copyUpcomingEventsMaintainHistory() {
 async function getUpcomingEvents(currentDate) {
   try {
     // Query all documents from events collection
-    const eventsQuery = query(collection(db, "events"));
+    const eventsQuery = query(collection(db, 'events'));
     const querySnapshot = await getDocs(eventsQuery);
 
     const upcomingEvents = [];
 
     // Filter documents based on date condition
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach(doc => {
       const eventData = doc.data();
-      const eventDate = eventData.date?.toDate ? eventData.date.toDate() : new Date(eventData.date);
+      const eventDate = eventData.date?.toDate
+        ? eventData.date.toDate()
+        : new Date(eventData.date);
 
       // Validate date
       if (!eventDate || isNaN(eventDate.getTime())) {
@@ -102,29 +111,39 @@ async function getUpcomingEvents(currentDate) {
       const eventDay = eventDate.getDate();
 
       // Create date objects for comparison (using current year)
-      const currentDateThisYear = new Date(currentDate.getFullYear(), currentMonth, currentDay);
-      const eventDateThisYear = new Date(currentDate.getFullYear(), eventMonth, eventDay);
+      const currentDateThisYear = new Date(
+        currentDate.getFullYear(),
+        currentMonth,
+        currentDay
+      );
+      const eventDateThisYear = new Date(
+        currentDate.getFullYear(),
+        eventMonth,
+        eventDay
+      );
 
       // Calculate the difference in days
-      const timeDiff = eventDateThisYear.getTime() - currentDateThisYear.getTime();
+      const timeDiff =
+        eventDateThisYear.getTime() - currentDateThisYear.getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
       // Check if event is within 10 days (including today)
       if (daysDiff >= 0 && daysDiff <= 10) {
         upcomingEvents.push({
           id: doc.id,
-          ...eventData
+          ...eventData,
         });
       }
     });
 
     return upcomingEvents;
-
   } catch (error) {
-    console.error("Error getting upcoming events:", error);
+    console.error('Error getting upcoming events:', error);
     // Provide more specific error message
     if (error.code === 'permission-denied') {
-      throw new Error('Insufficient permissions to access events. Please ensure you are logged in as an admin.');
+      throw new Error(
+        'Insufficient permissions to access events. Please ensure you are logged in as an admin.'
+      );
     }
     throw error;
   }
@@ -137,25 +156,24 @@ async function getRecentlyServedEvents(currentDate) {
     tenDaysAgo.setDate(currentDate.getDate() - 10);
 
     // Query events-served collection for events served in the last 10 days
-    const servedCollection = collection(db, "events-served");
+    const servedCollection = collection(db, 'events-served');
     const servedQuery = query(
       servedCollection,
-      where("servedAt", ">=", Timestamp.fromDate(tenDaysAgo)),
-      orderBy("servedAt", "desc")
+      where('servedAt', '>=', Timestamp.fromDate(tenDaysAgo)),
+      orderBy('servedAt', 'desc')
     );
 
     const servedSnapshot = await getDocs(servedQuery);
 
     // Convert to array of documents
     const servedEvents = [];
-    servedSnapshot.forEach((doc) => {
+    servedSnapshot.forEach(doc => {
       servedEvents.push(doc);
     });
 
     return servedEvents;
-
   } catch (error) {
-    console.error("Error getting recently served events:", error);
+    console.error('Error getting recently served events:', error);
     return []; // Return empty array to continue processing
   }
 }
@@ -163,28 +181,27 @@ async function getRecentlyServedEvents(currentDate) {
 // Alternative approach if you want to query by a specific date range
 async function getServedEventsByDateRange(startDate, endDate) {
   try {
-    const servedCollection = collection(db, "events-served");
+    const servedCollection = collection(db, 'events-served');
     const servedQuery = query(
       servedCollection,
-      where("servedAt", ">=", Timestamp.fromDate(startDate)),
-      where("servedAt", "<=", Timestamp.fromDate(endDate)),
-      orderBy("servedAt", "desc")
+      where('servedAt', '>=', Timestamp.fromDate(startDate)),
+      where('servedAt', '<=', Timestamp.fromDate(endDate)),
+      orderBy('servedAt', 'desc')
     );
 
     const servedSnapshot = await getDocs(servedQuery);
 
     const servedEvents = [];
-    servedSnapshot.forEach((doc) => {
+    servedSnapshot.forEach(doc => {
       servedEvents.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
 
     return servedEvents;
-
   } catch (error) {
-    console.error("Error getting served events by date range:", error);
+    console.error('Error getting served events by date range:', error);
     return [];
   }
 }
@@ -192,30 +209,31 @@ async function getServedEventsByDateRange(startDate, endDate) {
 // Function to get all historical served events (for reporting/history purposes)
 async function getAllServedEvents(limitCount = 1000) {
   try {
-    const servedCollection = collection(db, "events-served");
+    const servedCollection = collection(db, 'events-served');
     const servedQuery = query(
       servedCollection,
-      orderBy("servedAt", "desc"),
+      orderBy('servedAt', 'desc'),
       limit(limitCount)
     );
 
     const servedSnapshot = await getDocs(servedQuery);
 
     const allServedEvents = [];
-    servedSnapshot.forEach((doc) => {
+    servedSnapshot.forEach(doc => {
       allServedEvents.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
 
     return allServedEvents;
-
   } catch (error) {
-    console.error("Error getting all served events:", error);
+    console.error('Error getting all served events:', error);
     // Provide more specific error message
     if (error.code === 'permission-denied') {
-      throw new Error('Insufficient permissions to access served events. Please ensure you are logged in as an admin.');
+      throw new Error(
+        'Insufficient permissions to access served events. Please ensure you are logged in as an admin.'
+      );
     }
     throw error;
   }
@@ -229,7 +247,9 @@ async function getServedEventsAnalytics() {
     const monthlyStats = {};
 
     allServedEvents.forEach(event => {
-      const servedAt = event.servedAt?.toDate ? event.servedAt.toDate() : new Date(event.servedAt);
+      const servedAt = event.servedAt?.toDate
+        ? event.servedAt.toDate()
+        : new Date(event.servedAt);
       const monthYear = `${servedAt.getFullYear()}-${String(servedAt.getMonth() + 1).padStart(2, '0')}`;
 
       if (!monthlyStats[monthYear]) {
@@ -239,9 +259,8 @@ async function getServedEventsAnalytics() {
     });
 
     return monthlyStats;
-
   } catch (error) {
-    console.error("Error getting served events analytics:", error);
+    console.error('Error getting served events analytics:', error);
     throw error;
   }
 }
@@ -250,34 +269,34 @@ async function getServedEventsAnalytics() {
 
 // Regular usage - copy upcoming events without duplicates
 copyUpcomingEventsMaintainHistory()
-  .then((result) => {
-    console.log("Events processing result:", result);
+  .then(result => {
+    console.log('Events processing result:', result);
   })
-  .catch((error) => {
-    console.error("Failed to copy events:", error);
+  .catch(error => {
+    console.error('Failed to copy events:', error);
   });
 
 // Get all historical served events for reporting
 getAllServedEvents(100)
-  .then((events) => {
-    console.log("Historical served events:", events.length);
+  .then(events => {
+    console.log('Historical served events:', events.length);
   })
-  .catch((error) => {
-    console.error("Failed to get served events:", error);
+  .catch(error => {
+    console.error('Failed to get served events:', error);
   });
 
 // Get analytics
 getServedEventsAnalytics()
-  .then((stats) => {
-    console.log("Served events analytics:", stats);
+  .then(stats => {
+    console.log('Served events analytics:', stats);
   })
-  .catch((error) => {
-    console.error("Failed to get analytics:", error);
+  .catch(error => {
+    console.error('Failed to get analytics:', error);
   });
 
 export {
   copyUpcomingEventsMaintainHistory,
   getAllServedEvents,
   getServedEventsAnalytics,
-  getServedEventsByDateRange
+  getServedEventsByDateRange,
 };

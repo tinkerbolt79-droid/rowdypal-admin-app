@@ -12,21 +12,25 @@ A React-based web application built with Vite.
 ### Installation
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/tinkerbolt79-droid/rowdypal-ui-app.git
    ```
 
 2. Navigate to the project directory:
+
    ```
    cd rowdypal-ui-app
    ```
 
 3. Install dependencies:
+
    ```
    npm install
    ```
-   
+
    or if using yarn:
+
    ```
    yarn install
    ```
@@ -40,11 +44,13 @@ npm run dev
 ```
 
 or with yarn:
+
 ```
 yarn dev
 ```
 
 The application will start and you should see output similar to:
+
 ```
   VITE v7.2.2  ready in 123 ms
 
@@ -68,6 +74,7 @@ The application is hosted on Firebase Hosting and is available at the following 
 To deploy the application to Firebase Hosting:
 
 1. Build the application:
+
    ```
    npm run build
    ```

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { listAdminUsers, addAdminUser, removeAdminUser, fixAdminDocuments } from '../firebase/admin-setup';
+import {
+  listAdminUsers,
+  addAdminUser,
+  removeAdminUser,
+  fixAdminDocuments,
+} from '../firebase/admin-setup';
 import { setupAdminUser, isAdminUser } from '../firebase/setup-admin';
 
 export default function AdminSetup() {
@@ -37,7 +42,7 @@ export default function AdminSetup() {
     }
   };
 
-  const handleAddAdmin = async (e) => {
+  const handleAddAdmin = async e => {
     e.preventDefault();
     if (!newAdminEmail) {
       setMessage('Please provide email');
@@ -60,7 +65,7 @@ export default function AdminSetup() {
     }
   };
 
-  const handleRemoveAdmin = async (uid) => {
+  const handleRemoveAdmin = async uid => {
     try {
       setLoading(true);
       await removeAdminUser(uid);
@@ -116,26 +121,41 @@ export default function AdminSetup() {
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h2>Admin User Management</h2>
-      
-      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#e3f2fd', borderRadius: '4px' }}>
-        <strong>Current User:</strong> {currentUser.email} ({currentUser.uid || 'No UID'})<br/>
-        <strong>Admin Status:</strong> {isAdmin ? 'Authorized' : 'Not Authorized'}
+
+      <div
+        style={{
+          marginBottom: '15px',
+          padding: '10px',
+          backgroundColor: '#e3f2fd',
+          borderRadius: '4px',
+        }}
+      >
+        <strong>Current User:</strong> {currentUser.email} (
+        {currentUser.uid || 'No UID'})<br />
+        <strong>Admin Status:</strong>{' '}
+        {isAdmin ? 'Authorized' : 'Not Authorized'}
         {!isAdmin && (
           <div>
-            <button onClick={handleSetupCurrentUser} disabled={loading} style={{ marginTop: '10px' }}>
+            <button
+              onClick={handleSetupCurrentUser}
+              disabled={loading}
+              style={{ marginTop: '10px' }}
+            >
               {loading ? 'Setting up...' : 'Set Up Current User as Admin'}
             </button>
           </div>
         )}
       </div>
-      
+
       {message && (
-        <div style={{ 
-          padding: '10px', 
-          margin: '10px 0',
-          backgroundColor: message.includes('Error') ? '#ffebee' : '#e8f5e9',
-          borderRadius: '4px'
-        }}>
+        <div
+          style={{
+            padding: '10px',
+            margin: '10px 0',
+            backgroundColor: message.includes('Error') ? '#ffebee' : '#e8f5e9',
+            borderRadius: '4px',
+          }}
+        >
           {message}
         </div>
       )}
@@ -146,11 +166,11 @@ export default function AdminSetup() {
           <p>Loading...</p>
         ) : (
           <ul>
-            {admins.map((admin) => (
+            {admins.map(admin => (
               <li key={admin.id} style={{ marginBottom: '10px' }}>
                 <strong>{admin.email}</strong> ({admin.userId})
                 {admin.userId !== (currentUser.uid || currentUser.email) && (
-                  <button 
+                  <button
                     onClick={() => handleRemoveAdmin(admin.id)}
                     style={{ marginLeft: '10px' }}
                     disabled={loading}
@@ -164,7 +184,14 @@ export default function AdminSetup() {
         )}
       </div>
 
-      <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '4px' }}>
+      <div
+        style={{
+          marginBottom: '20px',
+          padding: '15px',
+          border: '1px solid #ccc',
+          borderRadius: '4px',
+        }}
+      >
         <h3>Add New Admin User</h3>
         <form onSubmit={handleAddAdmin}>
           <div style={{ marginBottom: '10px' }}>
@@ -173,7 +200,7 @@ export default function AdminSetup() {
               <input
                 type="text"
                 value={newAdminUid}
-                onChange={(e) => setNewAdminUid(e.target.value)}
+                onChange={e => setNewAdminUid(e.target.value)}
                 style={{ display: 'block', width: '100%', padding: '5px' }}
                 placeholder="Firebase User UID (optional)"
               />
@@ -185,7 +212,7 @@ export default function AdminSetup() {
               <input
                 type="email"
                 value={newAdminEmail}
-                onChange={(e) => setNewAdminEmail(e.target.value)}
+                onChange={e => setNewAdminEmail(e.target.value)}
                 style={{ display: 'block', width: '100%', padding: '5px' }}
                 placeholder="User Email"
                 required
